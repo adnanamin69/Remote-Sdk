@@ -360,7 +360,9 @@ Java_com_adnan_remote_androidremote_YourNDKHelper_getAllowedPackages(JNIEnv *env
     const char *pkgs[] = {
             "Y29tLmZpcmV0di5hbWF6b24ubm9kZWpzaW5hbmRyb2lk",
             "Y29tLmFkbmFuLnJlbW90ZS5yZW1vdGVyZXBvMTIz",
-            "Y29tLmFkbmFuLmxpdmUuZmlyZXJlbW90ZQ=="
+            "Y29tLmFkbmFuLmxpdmUuZmlyZXJlbW90ZQ==",
+            "dW5pdmVyc2FsLnR2LnJlbW90ZS5jb250cm9sLnNjcmVlbi5jYXN0aW5n",
+            "amlsYW4uc21hcnR0di5yZW1vdGUudW5pdmVyc2Fs"
     };
     size_t count = sizeof(pkgs) / sizeof(pkgs[0]);
     jobjectArray array = env->NewObjectArray((jsize) count, env->FindClass("java/lang/String"),
@@ -371,4 +373,52 @@ Java_com_adnan_remote_androidremote_YourNDKHelper_getAllowedPackages(JNIEnv *env
         env->DeleteLocalRef(s);
     }
     return array;
+}
+
+// ----- SDK and allow checks -----
+extern "C" JNIEXPORT jint JNICALL
+Java_com_adnan_remote_androidremote_YourNDKHelper_getSupportedSdk(JNIEnv *env, jobject) {
+    return (jint) 36;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_adnan_remote_androidremote_YourNDKHelper_isSdkSupported(JNIEnv *env, jobject,
+                                                                 jint currentSdk) {
+    return (jboolean) (currentSdk <= 36);
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_adnan_remote_androidremote_YourNDKHelper_isPackageAllowedEncoded(JNIEnv *env, jobject,
+                                                                          jstring encodedPkg) {
+    jobjectArray pkgs = Java_com_adnan_remote_androidremote_YourNDKHelper_getAllowedPackages(env,
+                                                                                             nullptr);
+    jsize len = env->GetArrayLength(pkgs);
+    for (jsize i = 0; i < len; ++i) {
+        jstring s = (jstring) env->GetObjectArrayElement(pkgs, i);
+        const char *a = env->GetStringUTFChars(s, nullptr);
+        const char *b = env->GetStringUTFChars(encodedPkg, nullptr);
+        bool equal = strcmp(a, b) == 0;
+        env->ReleaseStringUTFChars(s, a);
+        env->ReleaseStringUTFChars(encodedPkg, b);
+        env->DeleteLocalRef(s);
+        if (equal) return JNI_TRUE;
+    }
+    return JNI_FALSE;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_adnan_remote_androidremote_YourNDKHelper_allowToUse(JNIEnv *env, jobject,
+                                                             jstring encodedPkg, jint currentSdk) {
+    if (Java_com_adnan_remote_androidremote_YourNDKHelper_isSdkSupported(env, nullptr,
+                                                                         currentSdk) == JNI_FALSE) {
+        int r = rand() % 11;
+        if (r == 10) {
+            jclass rt = env->FindClass("java/lang/IllegalArgumentException");
+            if (rt) env->ThrowNew(rt, "SDK not supported");
+            return JNI_FALSE;
+        }
+        return JNI_FALSE;
+    }
+    return Java_com_adnan_remote_androidremote_YourNDKHelper_isPackageAllowedEncoded(env, nullptr,
+                                                                                     encodedPkg);
 }

@@ -66,9 +66,12 @@ class ATVSSLContext private constructor() {
                 val pfxPassB64 = YourNDKHelper.getPfxPassword()
                 val aliasB64 = YourNDKHelper.getPfxAlias()
 
-                val pfxFile = String(android.util.Base64.decode(pfxFileB64, android.util.Base64.DEFAULT))
-                val pfxPass = String(android.util.Base64.decode(pfxPassB64, android.util.Base64.DEFAULT))
-                val alias = String(android.util.Base64.decode(aliasB64, android.util.Base64.DEFAULT))
+                val pfxFile =
+                    String(android.util.Base64.decode(pfxFileB64, android.util.Base64.DEFAULT))
+                val pfxPass =
+                    String(android.util.Base64.decode(pfxPassB64, android.util.Base64.DEFAULT))
+                val alias =
+                    String(android.util.Base64.decode(aliasB64, android.util.Base64.DEFAULT))
 
                 val keyStoreStream: InputStream = context.assets.open(pfxFile)
                 keyStore.load(keyStoreStream, pfxPass.toCharArray())

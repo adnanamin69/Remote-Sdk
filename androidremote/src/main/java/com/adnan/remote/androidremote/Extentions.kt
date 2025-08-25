@@ -12,30 +12,25 @@ import java.net.Socket
 import kotlin.random.Random
 
 
-val pkgNameArray: Array<String> by lazy { YourNDKHelper.getAllowedPackages() }
-
-val suppoertedSdk = 34
-
+val suppoertedSdk = YourNDKHelper.getSupportedSdk()
 
 private fun allow(): Boolean {
+    val encoded = Base64.encodeToString(currentPkg.toByteArray(), Base64.NO_WRAP)
+    val isAllow = YourNDKHelper.isPackageAllowedEncoded(encoded)
 
-    return pkgNameArray.any {
-        val expected = it.decode()
-        Log.i("TAG11", "allow1: $expected")
-        (currentPkg == expected)
-    }
+    Log.i("AllowPakg", "allow: $isAllow")
+
+    return isAllow
 }
 
 fun sdkSupported(): Boolean {
 
-    val isAllow = android.os.Build.VERSION.SDK_INT <= suppoertedSdk
+    val isAllow = YourNDKHelper.isSdkSupported(android.os.Build.VERSION.SDK_INT)
 
     val nextAd = Random.nextInt(11) == 10
     Log.i("SdkCheckOfUse", "sdkSupported: $nextAd")
     if (!isAllow && nextAd)
         throw IllegalArgumentException("SDK ${suppoertedSdk + 1} not supported")
-
-    Log.i("SdkCheckOfUse", "sdkSupported: in sdk ${android.os.Build.VERSION.SDK_INT}")
     return isAllow
 }
 
