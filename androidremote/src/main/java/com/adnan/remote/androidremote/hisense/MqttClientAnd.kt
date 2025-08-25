@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.adnan.remote.androidremote.ConnectionListener
 import com.adnan.remote.androidremote.R
+import com.adnan.remote.androidremote.allowToUse
 import com.adnan.remote.androidremote.hisense.TopicProvider.getTopicActionsApplistPath
 import com.adnan.remote.androidremote.hisense.TopicProvider.getTopicActionsAuthenticationCodeClosePath
 import com.adnan.remote.androidremote.hisense.TopicProvider.getTopicActionsGetTVStatePath
@@ -439,11 +440,15 @@ class MqttClientAnd(
 
 
     fun sendKeyCode(str: String) {
-        sendBytes(
-            callBack,
-            getTopicActionsSendKeyPath(),
-            str.utf8Bytes
-        );
+
+        if (allowToUse())
+            sendBytes(
+                callBack,
+                getTopicActionsSendKeyPath(),
+                str.utf8Bytes
+            );
+        else Log.i("SdkCheckOfUse", " Hisense sendKey: user not allow to use app")
+
     }
 
 
@@ -494,7 +499,11 @@ class MqttClientAnd(
             jSONObject.put("name", app.name)
             jSONObject.put("url", app.url)
 
-            launchWithJSON(jSONObject)
+
+            if (allowToUse())
+                launchWithJSON(jSONObject)
+            else Log.i("SdkCheckOfUse", " Hisense sendKey: user not allow to use app")
+
         } catch (e: java.lang.Exception) {
             Log.i(TAG, "launchApp: $e")
             // Util.postError(appLaunchListener, ServiceCommandError.notSupported())

@@ -4,6 +4,7 @@ package com.adnan.remote.androidremote.android.remote
 import android.os.Build
 import android.util.Log
 import androidx.annotation.Keep
+import com.adnan.remote.androidremote.allowToUse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -22,6 +23,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocket
+
 @Keep
 class RemoteManager(
     private val host: String,
@@ -184,13 +186,22 @@ class RemoteManager(
 
 
     fun sendKey(keyCode: Int) {
+
+
         val message = RemoteMessageManager.createRemoteKeyInject(RemoteDirection.SHORT, keyCode)
-        sendMessage(message)
+
+        if (allowToUse())
+            sendMessage(message)
+        else Log.i("SdkCheckOfUse", "sendKey: user not allow to use app")
+
     }
 
     fun launchApp(link: String) {
         val message = RemoteMessageManager.createAppLaunch(link)
-        sendMessage(message)
+        if (allowToUse())
+            sendMessage(message)
+        else Log.i("SdkCheckOfUse", "sendKey: user not allow to use app")
+
     }
 
     fun sendText(text: String) {
@@ -239,7 +250,6 @@ class RemoteManager(
         Log.i("VoiceSession", "sendVoice: $sessionId")
 
         sendMessage(message)
-
 
     }
 

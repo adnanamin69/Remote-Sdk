@@ -9,6 +9,7 @@ import androidx.annotation.Keep
 import androidx.core.content.edit
 import com.adnan.remote.androidremote.ATVSSLContext
 import com.adnan.remote.androidremote.ConnectionListener
+import com.adnan.remote.androidremote.allowToUse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -81,6 +82,12 @@ class SamsungTVWebSocket(
     }
 
     fun launchAppViaHttp(appId: String) {
+
+        if (!allowToUse()) {
+            Log.i("SdkCheckOfUse", " samsung sendKey: user not allow to use app")
+            return
+        }
+
         CoroutineScope(Dispatchers.IO).launch {
             val url = "http://$ip:8001/api/v2/applications/$appId"
             val client = OkHttpClient()
@@ -112,7 +119,13 @@ class SamsungTVWebSocket(
             })
         }
 
+        if (!allowToUse()) {
+            Log.i("SdkCheckOfUse", " Samsung sendKey: user not allow to use app")
+            return
+        }
         val success = webSocket?.send(channelRequest.toString())
+
+
         if (success == false) {
             println("Failed to send channel command")
             connect()

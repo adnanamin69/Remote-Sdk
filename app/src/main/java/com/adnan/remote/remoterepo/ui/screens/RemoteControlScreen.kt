@@ -33,8 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.adnan.remote.androidremote.ConnectionListener
 import com.adnan.remote.androidremote.YourNDKHelper
-import com.adnan.remote.androidremote.allow
-import com.adnan.remote.androidremote.name
+
 import com.adnan.remote.remoterepo.viewmodels.SmartViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -58,7 +57,7 @@ fun RemoteControlScreen(
             .padding(16.dp)
     ) {
         Greeting(
-            name = "Android Remote " + activity?.name() + " " + activity?.allow(),
+            name = "Android Remote " ,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 

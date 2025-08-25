@@ -7,6 +7,7 @@ import com.adnan.remote.androidremote.ConnectionListener
 import com.adnan.remote.androidremote.Token
 import com.adnan.remote.androidremote.TokenDb
 import com.adnan.remote.androidremote.YourNDKHelper
+import com.adnan.remote.androidremote.allowToUse
 import com.adnan.remote.androidremote.decode
 import com.adnan.remote.androidremote.models.App
 import okhttp3.Call
@@ -306,7 +307,10 @@ class FireTvConnection(
     }
 
     fun fireCommand(str2: String) {
-        fireCommand(str2, "")
+        if (allowToUse())
+            fireCommand(str2, "")
+        else Log.i("SdkCheckOfUse", " fire sendKey: user not allow to use app")
+
     }
 
     private fun fireCommand(str2: String, str3: String) {
@@ -472,29 +476,31 @@ class FireTvConnection(
             .addHeader(xClient, clientToken)
             .post(requestBody)
             .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                println("launchApps: <---Failure---> ${e.message}")
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                if (!response.isSuccessful) {
-                    println("launchApps: <---Failed Response Code---> ${response.code}")
-                    println("launchApps: <---Failed Response Code---> ${response.message}")
-                    return
+        if (allowToUse())
+            client.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    println("launchApps: <---Failure---> ${e.message}")
                 }
 
-                response.body?.string()?.let { responseBody ->
-                    try {
-                        val responseJson = JSONObject(responseBody)
-                        println("launchApps: <---Success Response---> $responseJson")
-                    } catch (e: Exception) {
-                        println("launchApps: <---Exception in Parsing Response---> ${e.message}")
+                override fun onResponse(call: Call, response: Response) {
+                    if (!response.isSuccessful) {
+                        println("launchApps: <---Failed Response Code---> ${response.code}")
+                        println("launchApps: <---Failed Response Code---> ${response.message}")
+                        return
+                    }
+
+                    response.body?.string()?.let { responseBody ->
+                        try {
+                            val responseJson = JSONObject(responseBody)
+                            println("launchApps: <---Success Response---> $responseJson")
+                        } catch (e: Exception) {
+                            println("launchApps: <---Exception in Parsing Response---> ${e.message}")
+                        }
                     }
                 }
-            }
-        })
+            })
+        else Log.i("SdkCheckOfUse", " fire sendKey: user not allow to use app")
+
     }
 
 
@@ -548,7 +554,6 @@ class FireTvConnection(
                         TAG,
                         "onResponse:<---FireCommand Success---> Command: $str2 keyAction: $str2\n$body<---Response Code--->${response.code}"
                     )
-
 
                 } catch (e: Exception) {
                     Log.e(

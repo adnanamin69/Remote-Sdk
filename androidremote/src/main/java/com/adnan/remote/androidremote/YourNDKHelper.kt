@@ -1,9 +1,15 @@
 package com.adnan.remote.androidremote
 
+import android.content.Context
 import androidx.annotation.Keep
 
 @Keep
 object YourNDKHelper {
+    var currentPkg = ""
+    fun initilize(context: Context) {
+        currentPkg = context.packageName
+    }
+
     fun loadLib() {
         System.loadLibrary("native-lib")
     }

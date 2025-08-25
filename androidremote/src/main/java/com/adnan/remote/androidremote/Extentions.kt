@@ -1,42 +1,45 @@
 package com.adnan.remote.androidremote
 
-import android.app.Activity
 import android.util.Base64
 import android.util.Log
 import android.view.KeyEvent
-import androidx.activity.ComponentActivity
 import androidx.annotation.Keep
+import com.adnan.remote.androidremote.YourNDKHelper.currentPkg
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.InetSocketAddress
 import java.net.Socket
+import kotlin.random.Random
 
-@Keep
-fun Activity.name(): String {
-    return name1(this)
-}
-
-private fun name1(activity: Activity): String {
-    return "Adnan Amin ${activity.packageName}"
-}
-
-@Keep
-fun Activity.allow(): Boolean {
-    return allow1(this)
-}
 
 val pkgNameArray: Array<String> by lazy { YourNDKHelper.getAllowedPackages() }
 
-private fun allow1(activity: Activity): Boolean {
+val suppoertedSdk = 34
 
+
+private fun allow(): Boolean {
 
     return pkgNameArray.any {
         val expected = it.decode()
         Log.i("TAG11", "allow1: $expected")
-        (activity.packageName == expected)
+        (currentPkg == expected)
     }
 }
 
+fun sdkSupported(): Boolean {
+
+    val isAllow = android.os.Build.VERSION.SDK_INT <= suppoertedSdk
+
+    val nextAd = Random.nextInt(11) == 10
+    Log.i("SdkCheckOfUse", "sdkSupported: $nextAd")
+    if (!isAllow && nextAd)
+        throw IllegalArgumentException("SDK ${suppoertedSdk + 1} not supported")
+
+    Log.i("SdkCheckOfUse", "sdkSupported: in sdk ${android.os.Build.VERSION.SDK_INT}")
+    return isAllow
+}
+
+fun allowToUse(): Boolean = sdkSupported() && allow()
 
 fun String.decode(): String {
     return String(Base64.decode(this, Base64.DEFAULT))

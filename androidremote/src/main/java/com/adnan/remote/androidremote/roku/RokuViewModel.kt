@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.KeyEvent
 import android.widget.Toast
 import com.adnan.remote.androidremote.ConnectionListener
+import com.adnan.remote.androidremote.allowToUse
 import com.wseemann.ecp.api.RokuDevice
 import com.wseemann.ecp.core.KeyPressKeyValues
 import com.wseemann.ecp.model.Channel
@@ -72,7 +73,10 @@ class RokuViewModel(
         val key = key1.rokuKey()
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                device?.device?.keyPressRequest(key);
+                if (allowToUse())
+                    device?.device?.keyPressRequest(key);
+                else Log.i("SdkCheckOfUse", "roku sendKey: user not allow to use app")
+
             } catch (e: Exception) {
                 Log.i("Exception", "keyPress: ${e.message}")
             }
@@ -164,6 +168,5 @@ private fun Int.rokuKey(): KeyPressKeyValues {
             KeyPressKeyValues.INPUTTUNER
         }
     }
-
 
 }
