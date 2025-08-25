@@ -17,7 +17,7 @@ class RemoteApp : Application() {
             modules(appModule)
             androidLogger()
         }
-        YourNDKHelper.loadLib()
+        //   YourNDKHelper.loadLib()
     }
 }
 

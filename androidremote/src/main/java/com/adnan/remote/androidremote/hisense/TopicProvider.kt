@@ -1,5 +1,7 @@
 package com.adnan.remote.androidremote.hisense
 
+import com.adnan.remote.androidremote.YourNDKHelper
+
 object TopicProvider {
     var clientID1: String = ""
     fun setClientID(clientID: String) {
@@ -12,88 +14,88 @@ object TopicProvider {
     }
 
     fun getTopicTVUIBasePath(): String =
-        "/remoteapp/tv/ui_service/${getClientID()}"
+        YourNDKHelper.getTopicTVUIBasePath(getClientID())
 
     fun getTopicTVPSBasePath(): String =
-        "/remoteapp/tv/platform_service/${getClientID()}"
+        YourNDKHelper.getTopicTVPSBasePath(getClientID())
 
     fun getTopicMobiBasePath(): String =
-        "/remoteapp/mobile/${getClientID()}"
+        YourNDKHelper.getTopicMobiBasePath(getClientID())
 
     fun getTopicBrcsBasePath(): String =
-        "/remoteapp/mobile/broadcast"
+        YourNDKHelper.getTopicBrcsBasePath()
 
     fun getTopicRemoBasePath(): String =
-        "/remoteapp/tv/remote_service/${getClientID()}"
+        YourNDKHelper.getTopicRemoBasePath(getClientID())
 
     fun getTopicActionsSendKeyPath(): String =
-        "${getTopicRemoBasePath()}/actions/sendkey"
+        YourNDKHelper.getTopicActionsSendKeyPath(getClientID())
 
     fun getTopicDataAuthenticationPath(): String =
-        "${getTopicMobiBasePath()}/ui_service/data/authentication"
+        YourNDKHelper.getTopicDataAuthenticationPath(getClientID())
 
     fun getTopicDataAuthenticationCodePath(): String =
-        "${getTopicMobiBasePath()}/ui_service/data/authenticationcode"
+        YourNDKHelper.getTopicDataAuthenticationCodePath(getClientID())
 
     fun getTopicDataAuthenticationCodeClosePath(): String =
-        "${getTopicMobiBasePath()}/ui_service/data/authenticationcodeclose"
+        YourNDKHelper.getTopicDataAuthenticationCodeClosePath(getClientID())
 
     fun getTopicActionsAuthenticationCodeClosePath(): String =
-        "${getTopicTVUIBasePath()}/actions/authenticationcodeclose"
+        YourNDKHelper.getTopicActionsAuthenticationCodeClosePath(getClientID())
 
     fun getTopicActionsAuthenticationCodePath(): String =
-        "${getTopicTVUIBasePath()}/actions/authenticationcode"
+        YourNDKHelper.getTopicActionsAuthenticationCodePath(getClientID())
 
     fun getTopicDataHotelModeChangePath(): String =
-        "${getTopicBrcsBasePath()}/ui_service/data/hotelmodechange"
+        YourNDKHelper.getTopicDataHotelModeChangePath()
 
     fun getTopicDataTokenIssuancePath(): String =
-        "${getTopicMobiBasePath()}/platform_service/data/tokenissuance"
+        YourNDKHelper.getTopicDataTokenIssuancePath(getClientID())
 
     fun getTopicActionsGetTVStatePath(): String =
-        "${getTopicTVUIBasePath()}/actions/gettvstate"
+        YourNDKHelper.getTopicActionsGetTVStatePath(getClientID())
 
     fun getTopicStatePath(): String =
-        "${getTopicBrcsBasePath()}/ui_service/state"
+        YourNDKHelper.getTopicStatePath()
 
     fun getTopicActionsVidaaAppConnectPath(): String =
-        "${getTopicTVUIBasePath()}/actions/vidaa_app_connect"
+        YourNDKHelper.getTopicActionsVidaaAppConnectPath(getClientID())
 
     fun getTopicActionsApplistPath(): String =
-        "${getTopicTVUIBasePath()}/actions/applist"
+        YourNDKHelper.getTopicActionsApplistPath(getClientID())
 
     fun getTopicActionsLaunchAppPath(): String =
-        "${getTopicTVUIBasePath()}/actions/launchapp"
+        YourNDKHelper.getTopicActionsLaunchAppPath(getClientID())
 
     fun getTopicDataApplistPath(): String =
-        "${getTopicMobiBasePath()}/ui_service/data/applist"
+        YourNDKHelper.getTopicDataApplistPath(getClientID())
 
     fun getTopicActionsChangeSourcePath(): String =
-        "${getTopicTVUIBasePath()}/actions/changesource"
+        YourNDKHelper.getTopicActionsChangeSourcePath(getClientID())
 
     fun getTopicActionsSourcelistPath(): String =
-        "${getTopicTVUIBasePath()}/actions/sourcelist"
+        YourNDKHelper.getTopicActionsSourcelistPath(getClientID())
 
     fun getTopicDataSourcelistPath(): String =
-        "${getTopicMobiBasePath()}/ui_service/data/sourcelist"
+        YourNDKHelper.getTopicDataSourcelistPath(getClientID())
 
     fun getTopicDataGetTokenPath(): String =
-        "${getTopicTVPSBasePath()}/data/gettoken"
+        YourNDKHelper.getTopicDataGetTokenPath(getClientID())
 
     fun getTopicActionsSetVolumePath(): String =
-        "${getTopicTVPSBasePath()}/actions/changevolume"
+        YourNDKHelper.getTopicActionsSetVolumePath(getClientID())
 
     fun getTopicActionsGetVolumePath(): String =
-        "${getTopicTVPSBasePath()}/actions/getvolume"
+        YourNDKHelper.getTopicActionsGetVolumePath(getClientID())
 
     fun getTopicDataGetVolumePath(): String =
-        "${getTopicBrcsBasePath()}/platform_service/actions/volumechange"
+        YourNDKHelper.getTopicDataGetVolumePath()
 
     fun getTopicActionsSendTextPath(): String =
-        "${getTopicRemoBasePath()}/actions/input"
+        YourNDKHelper.getTopicActionsSendTextPath(getClientID())
 
     fun getTopicDataGetTextPath(): String =
-        "${getTopicBrcsBasePath()}/platform_service/actions/bwsinputdata"
+        YourNDKHelper.getTopicDataGetTextPath()
 
     fun getWorkTopics(): Array<String> = arrayOf(
         getTopicDataSourcelistPath(),

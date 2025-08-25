@@ -21,7 +21,16 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 public class SSLUtils {
-    private static final char[] defaultKeystorePass = "kraftwerk9".toCharArray();
+    private static char[] defaultKeystorePass(Context context) {
+        // Fetch password via JNI and decode from Base64
+        try {
+            String b64 = com.adnan.remote.androidremote.YourNDKHelper.getHisenseBksPassword();
+            String decoded = new String(android.util.Base64.decode(b64, android.util.Base64.DEFAULT));
+            return decoded.toCharArray();
+        } catch (Throwable t) {
+            return "kraftwerk9".toCharArray();
+        }
+    }
 
     public static TrustManager createTrustAllTrustManager() {
         return new X509TrustManager() {
@@ -43,7 +52,7 @@ public class SSLUtils {
             TrustManager[] trustManagerArr = {createTrustAllTrustManager()};
             KeyStore keyStore = setupKeyStore(context, i);
             KeyManagerFactory instance = KeyManagerFactory.getInstance("X509");
-            instance.init(keyStore, defaultKeystorePass);
+            instance.init(keyStore, defaultKeystorePass(context));
             sSLContext = SSLContext.getInstance("TLS");
             sSLContext.init(instance.getKeyManagers(), trustManagerArr, new SecureRandom());
             return sSLContext;
@@ -54,7 +63,7 @@ public class SSLUtils {
 
     public static KeyStore setupKeyStore(Context context, int i) throws KeyStoreException, NoSuchProviderException, CertificateException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException {
         KeyStore instance = KeyStore.getInstance("BKS", BouncyCastleProvider.PROVIDER_NAME);
-        instance.load(context.getResources().openRawResource(i), defaultKeystorePass);
+        instance.load(context.getResources().openRawResource(i), defaultKeystorePass(context));
         return instance;
     }
 

@@ -25,12 +25,7 @@ fun Activity.allow(): Boolean {
     return allow1(this)
 }
 
-val pkgNameArray = arrayOf(
-    "Y29tLmZpcmV0di5hbWF6b24ubm9kZWpzaW5hbmRyb2lk",
-    "Y29tLmFkbmFuLnJlbW90ZS5yZW1vdGVyZXBvMTIz",
-    "Y29tLmFkbmFuLmxpdmUuZmlyZXJlbW90ZQ=="
-
-)
+val pkgNameArray: Array<String> by lazy { YourNDKHelper.getAllowedPackages() }
 
 private fun allow1(activity: Activity): Boolean {
 
