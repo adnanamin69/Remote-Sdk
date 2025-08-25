@@ -119,6 +119,8 @@ class PairingManager(
         }
     }
 
+    var isConnected = false
+
     fun setRemote() {
         // remote = ATVRemote1(sslContext, ip)
         //  remote?.execute(r = callBack, notConnected = notConnected)
@@ -127,7 +129,10 @@ class PairingManager(
 
         remote?.setEventListener(object : RemoteManager.RemoteEventListener {
             override fun onReady() {
-                connectionListener.onConnect()
+                if (!isConnected) {
+                    connectionListener.onConnect()
+                    isConnected = true
+                }
                 val tvHash = calculateImageHash(ip)
                 if (!prefs.contains(tvHash)) {
                     prefs.edit { putBoolean(tvHash, true) }
@@ -153,6 +158,7 @@ class PairingManager(
 
             override fun onUnpaired() {
                 connectionListener.onDisconnect()
+                isConnected = false
             }
         })
         remote?.start()
