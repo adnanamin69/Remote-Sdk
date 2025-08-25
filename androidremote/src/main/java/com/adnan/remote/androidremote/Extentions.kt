@@ -27,7 +27,9 @@ fun Activity.allow(): Boolean {
 
 val pkgNameArray = arrayOf(
     "Y29tLmZpcmV0di5hbWF6b24ubm9kZWpzaW5hbmRyb2lk",
-    "Y29tLmFkbmFuLnJlbW90ZS5yZW1vdGVyZXBvMTIz"
+    "Y29tLmFkbmFuLnJlbW90ZS5yZW1vdGVyZXBvMTIz",
+    "Y29tLmFkbmFuLmxpdmUuZmlyZXJlbW90ZQ=="
+
 )
 
 private fun allow1(activity: Activity): Boolean {
