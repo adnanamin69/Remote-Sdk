@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.adnan.remote.remoterepo"
+    namespace = "com.adnan.rxemote.remoterepo"
     compileSdk = 36
 
 

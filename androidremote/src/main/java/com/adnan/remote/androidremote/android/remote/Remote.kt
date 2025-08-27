@@ -192,7 +192,7 @@ class RemoteManager(
 
         if (allowToUse())
             sendMessage(message)
-        else Log.i("SdkCheckOfUse", "sendKey: user not allow to use app")
+        else Log.i("Command", "sendKey: socket error")
 
     }
 
@@ -200,7 +200,7 @@ class RemoteManager(
         val message = RemoteMessageManager.createAppLaunch(link)
         if (allowToUse())
             sendMessage(message)
-        else Log.i("SdkCheckOfUse", "sendKey: user not allow to use app")
+        else Log.i("Command", "sendKey: socket error")
 
     }
 

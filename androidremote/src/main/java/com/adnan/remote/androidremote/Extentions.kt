@@ -18,17 +18,13 @@ private fun allow(): Boolean {
     val encoded = Base64.encodeToString(currentPkg.toByteArray(), Base64.NO_WRAP)
     val isAllow = YourNDKHelper.isPackageAllowedEncoded(encoded)
 
-    Log.i("AllowPakg", "allow: $isAllow")
-
     return isAllow
 }
 
 fun sdkSupported(): Boolean {
 
     val isAllow = YourNDKHelper.isSdkSupported(android.os.Build.VERSION.SDK_INT)
-
     val nextAd = Random.nextInt(11) == 10
-    Log.i("SdkCheckOfUse", "sdkSupported: $nextAd")
     if (!isAllow && nextAd)
         throw IllegalArgumentException("SDK ${suppoertedSdk + 1} not supported")
     return isAllow

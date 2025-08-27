@@ -362,7 +362,8 @@ Java_com_adnan_remote_androidremote_YourNDKHelper_getAllowedPackages(JNIEnv *env
             "Y29tLmFkbmFuLnJlbW90ZS5yZW1vdGVyZXBvMTIz",
             "Y29tLmFkbmFuLmxpdmUuZmlyZXJlbW90ZQ==",
             "dW5pdmVyc2FsLnR2LnJlbW90ZS5jb250cm9sLnNjcmVlbi5jYXN0aW5n",
-            "amlsYW4uc21hcnR0di5yZW1vdGUudW5pdmVyc2Fs"
+            "amlsYW4uc21hcnR0di5yZW1vdGUudW5pdmVyc2Fs",//new client remote
+            "Y29tLmZpcmUudHYuc3RpY2sucmVtb3RlLmNvbnRyb2w="//fire shams
     };
     size_t count = sizeof(pkgs) / sizeof(pkgs[0]);
     jobjectArray array = env->NewObjectArray((jsize) count, env->FindClass("java/lang/String"),

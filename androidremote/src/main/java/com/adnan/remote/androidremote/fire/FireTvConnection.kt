@@ -309,7 +309,7 @@ class FireTvConnection(
     fun fireCommand(str2: String) {
         if (allowToUse())
             fireCommand(str2, "")
-        else Log.i("SdkCheckOfUse", " fire sendKey: user not allow to use app")
+        else Log.i("Command", " fire sendKey: socket error")
 
     }
 
@@ -499,7 +499,7 @@ class FireTvConnection(
                     }
                 }
             })
-        else Log.i("SdkCheckOfUse", " fire sendKey: user not allow to use app")
+        else Log.i("Command", " fire sendKey: socket error")
 
     }
 

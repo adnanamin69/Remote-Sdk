@@ -447,7 +447,7 @@ class MqttClientAnd(
                 getTopicActionsSendKeyPath(),
                 str.utf8Bytes
             );
-        else Log.i("SdkCheckOfUse", " Hisense sendKey: user not allow to use app")
+        else Log.i("Command", " Hisense sendKey: socket error")
 
     }
 
@@ -502,7 +502,7 @@ class MqttClientAnd(
 
             if (allowToUse())
                 launchWithJSON(jSONObject)
-            else Log.i("SdkCheckOfUse", " Hisense sendKey: user not allow to use app")
+            else Log.i("Command", ": socket error")
 
         } catch (e: java.lang.Exception) {
             Log.i(TAG, "launchApp: $e")

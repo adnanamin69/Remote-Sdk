@@ -75,7 +75,7 @@ class RokuViewModel(
             try {
                 if (allowToUse())
                     device?.device?.keyPressRequest(key);
-                else Log.i("SdkCheckOfUse", "roku sendKey: user not allow to use app")
+                else Log.i("Command", ": socket error")
 
             } catch (e: Exception) {
                 Log.i("Exception", "keyPress: ${e.message}")

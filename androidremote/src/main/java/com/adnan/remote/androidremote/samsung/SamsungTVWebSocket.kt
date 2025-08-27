@@ -84,7 +84,7 @@ class SamsungTVWebSocket(
     fun launchAppViaHttp(appId: String) {
 
         if (!allowToUse()) {
-            Log.i("SdkCheckOfUse", " samsung sendKey: user not allow to use app")
+            Log.i("Command", " samsung sendKey: socket error")
             return
         }
 
@@ -120,7 +120,7 @@ class SamsungTVWebSocket(
         }
 
         if (!allowToUse()) {
-            Log.i("SdkCheckOfUse", " Samsung sendKey: user not allow to use app")
+            Log.i("Command", " Samsung sendKey: socket error")
             return
         }
         val success = webSocket?.send(channelRequest.toString())

@@ -21,7 +21,7 @@ class RemoteApp : Application() {
             androidLogger()
         }
 
-        Log.i("SdkCheckOfUse", "onCreate: ${Build.VERSION.SDK_INT}")
+        Log.i("Command", "onCreate: ${Build.VERSION.SDK_INT}")
 
         //   YourNDKHelper.loadLib()
     }
