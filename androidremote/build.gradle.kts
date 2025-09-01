@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.adnan.remote.androidremote"
+    namespace = "com.sdk.remote.androidremote"
     compileSdk = 36
 
     defaultConfig {

@@ -33,12 +33,12 @@ import org.json.JSONObject;
 
 import android.util.Log;
 
-import com.adnan.remote.androidremote.android.PairingManager;
-import com.adnan.remote.androidremote.fire.FireTvConnection;
-import com.adnan.remote.androidremote.DeviceType;
-import com.adnan.remote.androidremote.hisense.MqttClientAnd;
-import com.adnan.remote.androidremote.roku.RokuViewModel;
-import com.adnan.remote.androidremote.samsung.SamsungTVWebSocket;
+import com.sdk.remote.androidremote.android.PairingManager;
+import com.sdk.remote.androidremote.fire.FireTvConnection;
+import com.sdk.remote.androidremote.DeviceType;
+import com.sdk.remote.androidremote.hisense.MqttClientAnd;
+import com.sdk.remote.androidremote.roku.RokuViewModel;
+import com.sdk.remote.androidremote.samsung.SamsungTVWebSocket;
 import com.connectsdk.core.Util;
 import com.connectsdk.discovery.DiscoveryManager;
 import com.connectsdk.service.DeviceService;

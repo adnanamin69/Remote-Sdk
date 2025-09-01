@@ -22,33 +22,33 @@
 
 
 # Keep the constructor and public methods of FireTvConnection
--keep class com.adnan.remote.androidremote.fire.FireTvConnection {
-    public <init>(android.content.Context, java.lang.String,com.adnan.remote.androidremote.ConnectionListener);
+-keep class com.sdk.remote.androidremote.fire.FireTvConnection {
+    public <init>(android.content.Context, java.lang.String,com.sdk.remote.androidremote.ConnectionListener);
     public *;
 }
 
 
--keep class com.adnan.remote.androidremote.hisense.MqttClientAnd {
-    public <init>(android.content.Context, java.lang.String,com.adnan.remote.androidremote.ConnectionListener);
+-keep class com.sdk.remote.androidremote.hisense.MqttClientAnd {
+    public <init>(android.content.Context, java.lang.String,com.sdk.remote.androidremote.ConnectionListener);
     public *;
 }
 
 
--keep class com.adnan.remote.androidremote.samsung.SamsungTVWebSocket {
-    public <init>(android.content.Context, java.lang.String,com.adnan.remote.androidremote.ConnectionListener);
+-keep class com.sdk.remote.androidremote.samsung.SamsungTVWebSocket {
+    public <init>(android.content.Context, java.lang.String,com.sdk.remote.androidremote.ConnectionListener);
     public *;
 }
 
--keep class com.adnan.remote.androidremote.roku.RokuViewModel {
-    public <init>( java.lang.String,com.adnan.remote.androidremote.ConnectionListener);
+-keep class com.sdk.remote.androidremote.roku.RokuViewModel {
+    public <init>( java.lang.String,com.sdk.remote.androidremote.ConnectionListener);
     public *;
 }
--keep class com.adnan.remote.androidremote.android.PairingManager {
-    public <init>( java.lang.String,com.adnan.remote.androidremote.ConnectionListener);
+-keep class com.sdk.remote.androidremote.android.PairingManager {
+    public <init>( java.lang.String,com.sdk.remote.androidremote.ConnectionListener);
     public *;
 }
 
--keep class com.adnan.remote.androidremote.android.remote.RemoteManager {
+-keep class com.sdk.remote.androidremote.android.remote.RemoteManager {
     public *;
 }
 
