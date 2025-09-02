@@ -70,7 +70,7 @@ static std::string build(const std::string &a, const std::string &b) {
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicTVUIBasePath(JNIEnv *env, jobject,
-                                                                       jstring clientId) {
+                                                                     jstring clientId) {
     const char *cid = env->GetStringUTFChars(clientId, nullptr);
     std::string path = std::string("/remoteapp/tv/ui_service/") + cid;
     env->ReleaseStringUTFChars(clientId, cid);
@@ -79,7 +79,7 @@ Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicTVUIBasePath(JNIEnv *env
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicTVPSBasePath(JNIEnv *env, jobject,
-                                                                       jstring clientId) {
+                                                                     jstring clientId) {
     const char *cid = env->GetStringUTFChars(clientId, nullptr);
     std::string path = std::string("/remoteapp/tv/platform_service/") + cid;
     env->ReleaseStringUTFChars(clientId, cid);
@@ -88,7 +88,7 @@ Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicTVPSBasePath(JNIEnv *env
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicMobiBasePath(JNIEnv *env, jobject,
-                                                                       jstring clientId) {
+                                                                     jstring clientId) {
     const char *cid = env->GetStringUTFChars(clientId, nullptr);
     std::string path = std::string("/remoteapp/mobile/") + cid;
     env->ReleaseStringUTFChars(clientId, cid);
@@ -102,7 +102,7 @@ Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicBrcsBasePath(JNIEnv *env
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicRemoBasePath(JNIEnv *env, jobject,
-                                                                       jstring clientId) {
+                                                                     jstring clientId) {
     const char *cid = env->GetStringUTFChars(clientId, nullptr);
     std::string path = std::string("/remoteapp/tv/remote_service/") + cid;
     env->ReleaseStringUTFChars(clientId, cid);
@@ -113,10 +113,10 @@ Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicRemoBasePath(JNIEnv *env
 #define JSTR(ret) extern "C" JNIEXPORT jstring JNICALL ret
 
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsSendKeyPath)(JNIEnv *env,
-                                                                                   jobject thiz,
-                                                                                   jstring clientId) {
+                                                                                 jobject thiz,
+                                                                                 jstring clientId) {
     jstring base = Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicRemoBasePath(env, thiz,
-                                                                                          clientId);
+                                                                                        clientId);
     const char *b = env->GetStringUTFChars(base, nullptr);
     std::string path = std::string(b) + "/actions/sendkey";
     env->ReleaseStringUTFChars(base, b);
@@ -125,10 +125,10 @@ JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsSendKeyPath)
 }
 
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicDataAuthenticationPath)(JNIEnv *env,
-                                                                                       jobject thiz,
-                                                                                       jstring clientId) {
+                                                                                     jobject thiz,
+                                                                                     jstring clientId) {
     jstring base = Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicMobiBasePath(env, thiz,
-                                                                                          clientId);
+                                                                                        clientId);
     const char *b = env->GetStringUTFChars(base, nullptr);
     std::string path = std::string(b) + "/ui_service/data/authentication";
     env->ReleaseStringUTFChars(base, b);
@@ -139,7 +139,7 @@ JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicDataAuthenticationP
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicDataAuthenticationCodePath)(
         JNIEnv *env, jobject thiz, jstring clientId) {
     jstring base = Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicMobiBasePath(env, thiz,
-                                                                                          clientId);
+                                                                                        clientId);
     const char *b = env->GetStringUTFChars(base, nullptr);
     std::string path = std::string(b) + "/ui_service/data/authenticationcode";
     env->ReleaseStringUTFChars(base, b);
@@ -150,7 +150,7 @@ JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicDataAuthenticationC
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicDataAuthenticationCodeClosePath)(
         JNIEnv *env, jobject thiz, jstring clientId) {
     jstring base = Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicMobiBasePath(env, thiz,
-                                                                                          clientId);
+                                                                                        clientId);
     const char *b = env->GetStringUTFChars(base, nullptr);
     std::string path = std::string(b) + "/ui_service/data/authenticationcodeclose";
     env->ReleaseStringUTFChars(base, b);
@@ -161,7 +161,7 @@ JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicDataAuthenticationC
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsAuthenticationCodeClosePath)(
         JNIEnv *env, jobject thiz, jstring clientId) {
     jstring base = Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicTVUIBasePath(env, thiz,
-                                                                                          clientId);
+                                                                                        clientId);
     const char *b = env->GetStringUTFChars(base, nullptr);
     std::string path = std::string(b) + "/actions/authenticationcodeclose";
     env->ReleaseStringUTFChars(base, b);
@@ -172,7 +172,7 @@ JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsAuthenticati
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsAuthenticationCodePath)(
         JNIEnv *env, jobject thiz, jstring clientId) {
     jstring base = Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicTVUIBasePath(env, thiz,
-                                                                                          clientId);
+                                                                                        clientId);
     const char *b = env->GetStringUTFChars(base, nullptr);
     std::string path = std::string(b) + "/actions/authenticationcode";
     env->ReleaseStringUTFChars(base, b);
@@ -181,15 +181,15 @@ JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsAuthenticati
 }
 
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicDataHotelModeChangePath)(JNIEnv *env,
-                                                                                        jobject) {
+                                                                                      jobject) {
     return env->NewStringUTF("/remoteapp/mobile/broadcast/ui_service/data/hotelmodechange");
 }
 
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicDataTokenIssuancePath)(JNIEnv *env,
-                                                                                      jobject thiz,
-                                                                                      jstring clientId) {
+                                                                                    jobject thiz,
+                                                                                    jstring clientId) {
     jstring base = Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicMobiBasePath(env, thiz,
-                                                                                          clientId);
+                                                                                        clientId);
     const char *b = env->GetStringUTFChars(base, nullptr);
     std::string path = std::string(b) + "/platform_service/data/tokenissuance";
     env->ReleaseStringUTFChars(base, b);
@@ -198,10 +198,10 @@ JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicDataTokenIssuancePa
 }
 
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsGetTVStatePath)(JNIEnv *env,
-                                                                                      jobject thiz,
-                                                                                      jstring clientId) {
+                                                                                    jobject thiz,
+                                                                                    jstring clientId) {
     jstring base = Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicTVUIBasePath(env, thiz,
-                                                                                          clientId);
+                                                                                        clientId);
     const char *b = env->GetStringUTFChars(base, nullptr);
     std::string path = std::string(b) + "/actions/gettvstate";
     env->ReleaseStringUTFChars(base, b);
@@ -216,7 +216,7 @@ JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicStatePath)(JNIEnv *
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsVidaaAppConnectPath)(
         JNIEnv *env, jobject thiz, jstring clientId) {
     jstring base = Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicTVUIBasePath(env, thiz,
-                                                                                          clientId);
+                                                                                        clientId);
     const char *b = env->GetStringUTFChars(base, nullptr);
     std::string path = std::string(b) + "/actions/vidaa_app_connect";
     env->ReleaseStringUTFChars(base, b);
@@ -225,10 +225,10 @@ JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsVidaaAppConn
 }
 
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsApplistPath)(JNIEnv *env,
-                                                                                   jobject thiz,
-                                                                                   jstring clientId) {
+                                                                                 jobject thiz,
+                                                                                 jstring clientId) {
     jstring base = Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicTVUIBasePath(env, thiz,
-                                                                                          clientId);
+                                                                                        clientId);
     const char *b = env->GetStringUTFChars(base, nullptr);
     std::string path = std::string(b) + "/actions/applist";
     env->ReleaseStringUTFChars(base, b);
@@ -237,10 +237,10 @@ JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsApplistPath)
 }
 
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsLaunchAppPath)(JNIEnv *env,
-                                                                                     jobject thiz,
-                                                                                     jstring clientId) {
+                                                                                   jobject thiz,
+                                                                                   jstring clientId) {
     jstring base = Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicTVUIBasePath(env, thiz,
-                                                                                          clientId);
+                                                                                        clientId);
     const char *b = env->GetStringUTFChars(base, nullptr);
     std::string path = std::string(b) + "/actions/launchapp";
     env->ReleaseStringUTFChars(base, b);
@@ -249,10 +249,10 @@ JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsLaunchAppPat
 }
 
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicDataApplistPath)(JNIEnv *env,
-                                                                                jobject thiz,
-                                                                                jstring clientId) {
+                                                                              jobject thiz,
+                                                                              jstring clientId) {
     jstring base = Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicMobiBasePath(env, thiz,
-                                                                                          clientId);
+                                                                                        clientId);
     const char *b = env->GetStringUTFChars(base, nullptr);
     std::string path = std::string(b) + "/ui_service/data/applist";
     env->ReleaseStringUTFChars(base, b);
@@ -261,10 +261,10 @@ JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicDataApplistPath)(JN
 }
 
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsChangeSourcePath)(JNIEnv *env,
-                                                                                        jobject thiz,
-                                                                                        jstring clientId) {
+                                                                                      jobject thiz,
+                                                                                      jstring clientId) {
     jstring base = Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicTVUIBasePath(env, thiz,
-                                                                                          clientId);
+                                                                                        clientId);
     const char *b = env->GetStringUTFChars(base, nullptr);
     std::string path = std::string(b) + "/actions/changesource";
     env->ReleaseStringUTFChars(base, b);
@@ -273,10 +273,10 @@ JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsChangeSource
 }
 
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsSourcelistPath)(JNIEnv *env,
-                                                                                      jobject thiz,
-                                                                                      jstring clientId) {
+                                                                                    jobject thiz,
+                                                                                    jstring clientId) {
     jstring base = Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicTVUIBasePath(env, thiz,
-                                                                                          clientId);
+                                                                                        clientId);
     const char *b = env->GetStringUTFChars(base, nullptr);
     std::string path = std::string(b) + "/actions/sourcelist";
     env->ReleaseStringUTFChars(base, b);
@@ -285,10 +285,10 @@ JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsSourcelistPa
 }
 
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicDataSourcelistPath)(JNIEnv *env,
-                                                                                   jobject thiz,
-                                                                                   jstring clientId) {
+                                                                                 jobject thiz,
+                                                                                 jstring clientId) {
     jstring base = Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicMobiBasePath(env, thiz,
-                                                                                          clientId);
+                                                                                        clientId);
     const char *b = env->GetStringUTFChars(base, nullptr);
     std::string path = std::string(b) + "/ui_service/data/sourcelist";
     env->ReleaseStringUTFChars(base, b);
@@ -297,10 +297,10 @@ JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicDataSourcelistPath)
 }
 
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicDataGetTokenPath)(JNIEnv *env,
-                                                                                 jobject thiz,
-                                                                                 jstring clientId) {
+                                                                               jobject thiz,
+                                                                               jstring clientId) {
     jstring base = Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicTVPSBasePath(env, thiz,
-                                                                                          clientId);
+                                                                                        clientId);
     const char *b = env->GetStringUTFChars(base, nullptr);
     std::string path = std::string(b) + "/data/gettoken";
     env->ReleaseStringUTFChars(base, b);
@@ -309,10 +309,10 @@ JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicDataGetTokenPath)(J
 }
 
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsSetVolumePath)(JNIEnv *env,
-                                                                                     jobject thiz,
-                                                                                     jstring clientId) {
+                                                                                   jobject thiz,
+                                                                                   jstring clientId) {
     jstring base = Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicTVPSBasePath(env, thiz,
-                                                                                          clientId);
+                                                                                        clientId);
     const char *b = env->GetStringUTFChars(base, nullptr);
     std::string path = std::string(b) + "/actions/changevolume";
     env->ReleaseStringUTFChars(base, b);
@@ -321,10 +321,10 @@ JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsSetVolumePat
 }
 
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsGetVolumePath)(JNIEnv *env,
-                                                                                     jobject thiz,
-                                                                                     jstring clientId) {
+                                                                                   jobject thiz,
+                                                                                   jstring clientId) {
     jstring base = Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicTVPSBasePath(env, thiz,
-                                                                                          clientId);
+                                                                                        clientId);
     const char *b = env->GetStringUTFChars(base, nullptr);
     std::string path = std::string(b) + "/actions/getvolume";
     env->ReleaseStringUTFChars(base, b);
@@ -333,15 +333,15 @@ JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsGetVolumePat
 }
 
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicDataGetVolumePath)(JNIEnv *env,
-                                                                                  jobject) {
+                                                                                jobject) {
     return env->NewStringUTF("/remoteapp/mobile/broadcast/platform_service/actions/volumechange");
 }
 
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsSendTextPath)(JNIEnv *env,
-                                                                                    jobject thiz,
-                                                                                    jstring clientId) {
+                                                                                  jobject thiz,
+                                                                                  jstring clientId) {
     jstring base = Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicRemoBasePath(env, thiz,
-                                                                                          clientId);
+                                                                                        clientId);
     const char *b = env->GetStringUTFChars(base, nullptr);
     std::string path = std::string(b) + "/actions/input";
     env->ReleaseStringUTFChars(base, b);
@@ -350,7 +350,7 @@ JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicActionsSendTextPath
 }
 
 JSTR(Java_com_sdk_remote_androidremote_YourNDKHelper_getTopicDataGetTextPath)(JNIEnv *env,
-                                                                                jobject) {
+                                                                              jobject) {
     return env->NewStringUTF("/remoteapp/mobile/broadcast/platform_service/actions/bwsinputdata");
 }
 
@@ -360,7 +360,7 @@ Java_com_sdk_remote_androidremote_YourNDKHelper_getAllowedPackages(JNIEnv *env, 
     const char *pkgs[] = {
             "Y29tLmZpcmV0di5hbWF6b24ubm9kZWpzaW5hbmRyb2lk",
             "Y29tLmFkbmFuLnJlbW90ZS5yZW1vdGVyZXBvMTIz",
-            "Y29tLmFkbmFuLmxpdmUuZmlyZXJlbW90ZQ==",
+            "Y29tLmFkbmFuLmxpdmUuZmlyZXJlbW90ZQ==",//my fire
             "dW5pdmVyc2FsLnR2LnJlbW90ZS5jb250cm9sLnNjcmVlbi5jYXN0aW5n",
             "amlsYW4uc21hcnR0di5yZW1vdGUudW5pdmVyc2Fs",//new client remote
             "Y29tLmZpcmUudHYuc3RpY2sucmVtb3RlLmNvbnRyb2w="//fire shams
@@ -384,15 +384,15 @@ Java_com_sdk_remote_androidremote_YourNDKHelper_getSupportedSdk(JNIEnv *env, job
 
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_sdk_remote_androidremote_YourNDKHelper_isSdkSupported(JNIEnv *env, jobject,
-                                                                 jint currentSdk) {
+                                                               jint currentSdk) {
     return (jboolean) (currentSdk <= 36);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_sdk_remote_androidremote_YourNDKHelper_isPackageAllowedEncoded(JNIEnv *env, jobject,
-                                                                          jstring encodedPkg) {
+                                                                        jstring encodedPkg) {
     jobjectArray pkgs = Java_com_sdk_remote_androidremote_YourNDKHelper_getAllowedPackages(env,
-                                                                                             nullptr);
+                                                                                           nullptr);
     jsize len = env->GetArrayLength(pkgs);
     for (jsize i = 0; i < len; ++i) {
         jstring s = (jstring) env->GetObjectArrayElement(pkgs, i);
@@ -409,9 +409,9 @@ Java_com_sdk_remote_androidremote_YourNDKHelper_isPackageAllowedEncoded(JNIEnv *
 
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_sdk_remote_androidremote_YourNDKHelper_allowToUse(JNIEnv *env, jobject,
-                                                             jstring encodedPkg, jint currentSdk) {
+                                                           jstring encodedPkg, jint currentSdk) {
     if (Java_com_sdk_remote_androidremote_YourNDKHelper_isSdkSupported(env, nullptr,
-                                                                         currentSdk) == JNI_FALSE) {
+                                                                       currentSdk) == JNI_FALSE) {
         int r = rand() % 11;
         if (r == 10) {
             jclass rt = env->FindClass("java/lang/IllegalArgumentException");
@@ -421,5 +421,5 @@ Java_com_sdk_remote_androidremote_YourNDKHelper_allowToUse(JNIEnv *env, jobject,
         return JNI_FALSE;
     }
     return Java_com_sdk_remote_androidremote_YourNDKHelper_isPackageAllowedEncoded(env, nullptr,
-                                                                                     encodedPkg);
+                                                                                   encodedPkg);
 }
