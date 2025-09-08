@@ -2,23 +2,20 @@ package com.utils.live.commonsdk.viewmodels_repo
 
 import android.app.Application
 import android.util.Log
+import android.view.KeyEvent
 import androidx.annotation.Keep
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.connectsdk.device.ConnectableDevice
-import com.connectsdk.service.capability.Launcher
-import com.connectsdk.service.capability.Launcher.AppLaunchListener
-import com.connectsdk.service.command.ServiceCommandError
-import com.connectsdk.service.sessions.LaunchSession
 import com.sdk.remote.androidremote.ConnectionListener
 import com.sdk.remote.androidremote.DeviceType
 import com.sdk.remote.androidremote.models.App
-import com.sdk.remote.androidremote.roku.RokuViewModel
 import com.sdk.remote.androidremote.samsung.samsungId
+import com.utils.live.commonsdk.getIconURL
+import com.utils.live.commonsdk.launchRokuApp
+import com.utils.live.commonsdk.openLgApp
 import com.utils.live.commonsdk.sendCommand
-import com.wseemann.ecp.model.Channel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -137,7 +134,32 @@ class SmartViewModel(
     }
 
     override fun onSendText(text: String) {
-        //  TODO("Not yet implemented")
+
+        val state = repo.state
+
+        try {
+            when (state.value.connectedDevice?.type) {
+                DeviceType.FIRE -> state.value.connectedDevice?.fireTvConnection?.fireText(text)
+                DeviceType.ANDROID -> state.value.connectedDevice?.androidPairingManager?.remote?.sendText(
+                    text
+                )
+
+                DeviceType.HISENSE -> state.value.connectedDevice?.hisenseTvConnection?.sendText(
+                    text
+                )
+
+                DeviceType.ROKU -> state.value.connectedDevice?.rokuViewModel?.keyPress(
+                    text
+                )
+
+                DeviceType.SAMSUNG -> TODO()
+                DeviceType.LG -> TODO()
+                null -> TODO()
+            }
+        } catch (ee: Exception) {
+            Log.i("ATVRemote", "buttonPressed: ${ee.message}")
+        }
+
     }
 
 
@@ -145,12 +167,26 @@ class SmartViewModel(
         repo.removeSavedDevice(ipAddress)
     }
 
-    override fun sendVoice(value: Int) {
-        //TODO("Not yet implemented")
+    override fun activateVoice() {
+        // state.value.pairingManager?.remote?.activateVoice()
+        if (repo.state.value.connectedDevice?.type == DeviceType.FIRE)
+            repo.state.value.connectedDevice?.fireTvConnection?.fireVoice("start")
+        else repo.state.value.connectedDevice?.androidPairingManager?.remote?.sendKey(KeyEvent.KEYCODE_SEARCH)
+    }
+
+    override fun endVoice() {
+        val state = repo.state
+        if (state.value.connectedDevice?.type == DeviceType.FIRE)
+            state.value.connectedDevice?.fireTvConnection?.fireVoice("stop")
+        else state.value.connectedDevice?.androidPairingManager?.remote?.endVoice()
     }
 
     override fun senVoicePayload(bytes: ByteArray) {
-        // TODO("Not yet implemented")
+
+        if (repo.state.value.connectedDevice?.type == DeviceType.FIRE)
+            repo.state.value.connectedDevice?.fireTvConnection?.setVoiceBytes(bytes)
+        else
+            repo.state.value.connectedDevice?.androidPairingManager?.remote?.sendVoice(bytes)
     }
 
     override fun saveDevice(device: ConnectableDevice) {
@@ -159,43 +195,6 @@ class SmartViewModel(
 
 }
 
-private fun ConnectableDevice.launchRokuApp(app: App) {
-    rokuViewModel.openApp(app.content)
-}
-
-private fun ConnectableDevice.openLgApp(content: String) {
-    getCapability(Launcher::class.java)
-        ?.launchApp(
-            content,
-            object : AppLaunchListener {
-                override fun onError(error: ServiceCommandError) {
-                    Log.d(
-                        TAG,
-                        "App Launch error: ${error.message}"
-                    )
-                }
-
-                override fun onSuccess(`object`: LaunchSession) {
-                    Log.d(
-                        TAG,
-                        "App Launch success."
-                    )
-                }
-            })
-}
-
-
-private fun RokuViewModel.getIconURL(channelId: String): String {
-    var url = ""
-
-    try {
-        url = "${getRoku()?.host}/query/icon/$channelId"
-    } catch (ex: Exception) {
-        // Handle the exception if needed
-    }
-
-    return url
-}
 
 
 

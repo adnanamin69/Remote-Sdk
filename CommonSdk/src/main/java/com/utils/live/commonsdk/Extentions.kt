@@ -9,12 +9,15 @@ import com.connectsdk.device.ConnectableDeviceListener
 import com.connectsdk.service.DeviceService
 import com.connectsdk.service.capability.CapabilityMethods
 import com.connectsdk.service.capability.KeyControl
+import com.connectsdk.service.capability.Launcher
+import com.connectsdk.service.capability.Launcher.AppLaunchListener
 import com.connectsdk.service.capability.MediaControl
 import com.connectsdk.service.capability.PlaylistControl
 import com.connectsdk.service.capability.PowerControl
 import com.connectsdk.service.capability.VolumeControl
 import com.connectsdk.service.capability.listeners.ResponseListener
 import com.connectsdk.service.command.ServiceCommandError
+import com.connectsdk.service.sessions.LaunchSession
 import com.sdk.remote.androidremote.ConnectionListener
 import com.sdk.remote.androidremote.DeviceType
 import com.sdk.remote.androidremote.android.PairingManager
@@ -24,9 +27,11 @@ import com.sdk.remote.androidremote.hisense.MqttClientAnd
 import com.sdk.remote.androidremote.hisense.toVidaaKeyCode
 import com.sdk.remote.androidremote.isPortOpen
 import com.sdk.remote.androidremote.isValidIP
+import com.sdk.remote.androidremote.models.App
 import com.sdk.remote.androidremote.roku.RokuViewModel
 import com.sdk.remote.androidremote.samsung.SamsungTVWebSocket
 import com.sdk.remote.androidremote.samsung.getCommand
+import com.utils.live.commonsdk.viewmodels_repo.TAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -241,3 +246,42 @@ fun ConnectableDevice.sendCommand(key: Int) {
     }
 }
 
+
+
+ fun ConnectableDevice.launchRokuApp(app: App) {
+    rokuViewModel.openApp(app.content)
+}
+
+ fun ConnectableDevice.openLgApp(content: String) {
+    getCapability(Launcher::class.java)
+        ?.launchApp(
+            content,
+            object : AppLaunchListener {
+                override fun onError(error: ServiceCommandError) {
+                    Log.d(
+                        TAG,
+                        "App Launch error: ${error.message}"
+                    )
+                }
+
+                override fun onSuccess(`object`: LaunchSession) {
+                    Log.d(
+                        TAG,
+                        "App Launch success."
+                    )
+                }
+            })
+}
+
+
+ fun RokuViewModel.getIconURL(channelId: String): String {
+    var url = ""
+
+    try {
+        url = "${getRoku()?.host}/query/icon/$channelId"
+    } catch (ex: Exception) {
+        // Handle the exception if needed
+    }
+
+    return url
+}

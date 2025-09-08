@@ -15,7 +15,8 @@ interface Presenter {
 
     fun onSendText(text: String)
     fun removeSavedDevice(ipAddress: String)
-    fun sendVoice(value: Int)
+    fun activateVoice()
+    fun endVoice()
     fun senVoicePayload(bytes: ByteArray)
     fun saveDevice(device: ConnectableDevice)
 }
