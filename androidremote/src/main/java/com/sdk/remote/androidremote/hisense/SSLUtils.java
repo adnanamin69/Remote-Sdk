@@ -24,7 +24,7 @@ public class SSLUtils {
     private static char[] defaultKeystorePass(Context context) {
         // Fetch password via JNI and decode from Base64
         try {
-            String b64 = com.sdk.remote.androidremote.YourNDKHelper.getHisenseBksPassword();
+            String b64 = com.sdk.remote.androidremote.RemoteNDKHelper.getHisenseBksPassword();
             String decoded = new String(android.util.Base64.decode(b64, android.util.Base64.DEFAULT));
             return decoded.toCharArray();
         } catch (Throwable t) {

@@ -20,5 +20,7 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "RemoteRepo"
-include(":app", ":Connect-SDK", ":androidremote")
+include(":app", ":Connect-SDK", ":androidremote", "CommonSdk")
+//include(":CommonSdk")
+
 //":androidremote"

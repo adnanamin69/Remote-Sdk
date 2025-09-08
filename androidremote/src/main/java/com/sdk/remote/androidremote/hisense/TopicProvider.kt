@@ -1,6 +1,6 @@
 package com.sdk.remote.androidremote.hisense
 
-import com.sdk.remote.androidremote.YourNDKHelper
+import com.sdk.remote.androidremote.RemoteNDKHelper
 
 object TopicProvider {
     var clientID1: String = ""
@@ -14,88 +14,88 @@ object TopicProvider {
     }
 
     fun getTopicTVUIBasePath(): String =
-        YourNDKHelper.getTopicTVUIBasePath(getClientID())
+        RemoteNDKHelper.getTopicTVUIBasePath(getClientID())
 
     fun getTopicTVPSBasePath(): String =
-        YourNDKHelper.getTopicTVPSBasePath(getClientID())
+        RemoteNDKHelper.getTopicTVPSBasePath(getClientID())
 
     fun getTopicMobiBasePath(): String =
-        YourNDKHelper.getTopicMobiBasePath(getClientID())
+        RemoteNDKHelper.getTopicMobiBasePath(getClientID())
 
     fun getTopicBrcsBasePath(): String =
-        YourNDKHelper.getTopicBrcsBasePath()
+        RemoteNDKHelper.getTopicBrcsBasePath()
 
     fun getTopicRemoBasePath(): String =
-        YourNDKHelper.getTopicRemoBasePath(getClientID())
+        RemoteNDKHelper.getTopicRemoBasePath(getClientID())
 
     fun getTopicActionsSendKeyPath(): String =
-        YourNDKHelper.getTopicActionsSendKeyPath(getClientID())
+        RemoteNDKHelper.getTopicActionsSendKeyPath(getClientID())
 
     fun getTopicDataAuthenticationPath(): String =
-        YourNDKHelper.getTopicDataAuthenticationPath(getClientID())
+        RemoteNDKHelper.getTopicDataAuthenticationPath(getClientID())
 
     fun getTopicDataAuthenticationCodePath(): String =
-        YourNDKHelper.getTopicDataAuthenticationCodePath(getClientID())
+        RemoteNDKHelper.getTopicDataAuthenticationCodePath(getClientID())
 
     fun getTopicDataAuthenticationCodeClosePath(): String =
-        YourNDKHelper.getTopicDataAuthenticationCodeClosePath(getClientID())
+        RemoteNDKHelper.getTopicDataAuthenticationCodeClosePath(getClientID())
 
     fun getTopicActionsAuthenticationCodeClosePath(): String =
-        YourNDKHelper.getTopicActionsAuthenticationCodeClosePath(getClientID())
+        RemoteNDKHelper.getTopicActionsAuthenticationCodeClosePath(getClientID())
 
     fun getTopicActionsAuthenticationCodePath(): String =
-        YourNDKHelper.getTopicActionsAuthenticationCodePath(getClientID())
+        RemoteNDKHelper.getTopicActionsAuthenticationCodePath(getClientID())
 
     fun getTopicDataHotelModeChangePath(): String =
-        YourNDKHelper.getTopicDataHotelModeChangePath()
+        RemoteNDKHelper.getTopicDataHotelModeChangePath()
 
     fun getTopicDataTokenIssuancePath(): String =
-        YourNDKHelper.getTopicDataTokenIssuancePath(getClientID())
+        RemoteNDKHelper.getTopicDataTokenIssuancePath(getClientID())
 
     fun getTopicActionsGetTVStatePath(): String =
-        YourNDKHelper.getTopicActionsGetTVStatePath(getClientID())
+        RemoteNDKHelper.getTopicActionsGetTVStatePath(getClientID())
 
     fun getTopicStatePath(): String =
-        YourNDKHelper.getTopicStatePath()
+        RemoteNDKHelper.getTopicStatePath()
 
     fun getTopicActionsVidaaAppConnectPath(): String =
-        YourNDKHelper.getTopicActionsVidaaAppConnectPath(getClientID())
+        RemoteNDKHelper.getTopicActionsVidaaAppConnectPath(getClientID())
 
     fun getTopicActionsApplistPath(): String =
-        YourNDKHelper.getTopicActionsApplistPath(getClientID())
+        RemoteNDKHelper.getTopicActionsApplistPath(getClientID())
 
     fun getTopicActionsLaunchAppPath(): String =
-        YourNDKHelper.getTopicActionsLaunchAppPath(getClientID())
+        RemoteNDKHelper.getTopicActionsLaunchAppPath(getClientID())
 
     fun getTopicDataApplistPath(): String =
-        YourNDKHelper.getTopicDataApplistPath(getClientID())
+        RemoteNDKHelper.getTopicDataApplistPath(getClientID())
 
     fun getTopicActionsChangeSourcePath(): String =
-        YourNDKHelper.getTopicActionsChangeSourcePath(getClientID())
+        RemoteNDKHelper.getTopicActionsChangeSourcePath(getClientID())
 
     fun getTopicActionsSourcelistPath(): String =
-        YourNDKHelper.getTopicActionsSourcelistPath(getClientID())
+        RemoteNDKHelper.getTopicActionsSourcelistPath(getClientID())
 
     fun getTopicDataSourcelistPath(): String =
-        YourNDKHelper.getTopicDataSourcelistPath(getClientID())
+        RemoteNDKHelper.getTopicDataSourcelistPath(getClientID())
 
     fun getTopicDataGetTokenPath(): String =
-        YourNDKHelper.getTopicDataGetTokenPath(getClientID())
+        RemoteNDKHelper.getTopicDataGetTokenPath(getClientID())
 
     fun getTopicActionsSetVolumePath(): String =
-        YourNDKHelper.getTopicActionsSetVolumePath(getClientID())
+        RemoteNDKHelper.getTopicActionsSetVolumePath(getClientID())
 
     fun getTopicActionsGetVolumePath(): String =
-        YourNDKHelper.getTopicActionsGetVolumePath(getClientID())
+        RemoteNDKHelper.getTopicActionsGetVolumePath(getClientID())
 
     fun getTopicDataGetVolumePath(): String =
-        YourNDKHelper.getTopicDataGetVolumePath()
+        RemoteNDKHelper.getTopicDataGetVolumePath()
 
     fun getTopicActionsSendTextPath(): String =
-        YourNDKHelper.getTopicActionsSendTextPath(getClientID())
+        RemoteNDKHelper.getTopicActionsSendTextPath(getClientID())
 
     fun getTopicDataGetTextPath(): String =
-        YourNDKHelper.getTopicDataGetTextPath()
+        RemoteNDKHelper.getTopicDataGetTextPath()
 
     fun getWorkTopics(): Array<String> = arrayOf(
         getTopicDataSourcelistPath(),

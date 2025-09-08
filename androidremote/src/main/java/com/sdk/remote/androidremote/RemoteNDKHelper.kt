@@ -4,9 +4,9 @@ import android.content.Context
 import androidx.annotation.Keep
 
 @Keep
-object YourNDKHelper {
+object RemoteNDKHelper {
     var currentPkg = ""
-    fun initilize(context: Context) {
+    fun initialize(context: Context) {
         currentPkg = context.packageName
     }
 

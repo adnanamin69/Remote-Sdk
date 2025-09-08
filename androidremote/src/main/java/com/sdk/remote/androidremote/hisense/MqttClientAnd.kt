@@ -465,7 +465,7 @@ class MqttClientAnd(
             val arrayList: ArrayList<App> = ArrayList(jSONArray.length())
             for (i in 0..<jSONArray.length()) {
                 val jSONObject = jSONArray.getJSONObject(i)
-                val appInfo = App(1, "", "")
+                val appInfo = App(null, "", "")
                 appInfo.id = (jSONObject.getString("appId"))
 
                 appInfo.url = (jSONObject.getString("url"))

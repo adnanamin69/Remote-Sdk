@@ -10,6 +10,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/CommonSdk" />
             <option value="$PROJECT_DIR$/Connect-SDK" />
             <option value="$PROJECT_DIR$/androidremote" />
             <option value="$PROJECT_DIR$/app" />

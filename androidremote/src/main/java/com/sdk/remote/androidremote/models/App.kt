@@ -4,7 +4,7 @@ import androidx.annotation.Keep
 
 @Keep
 data class App(
-    var image: Int,
+    var image: Int? = null,
     var name: String,
     var content: String,
     var pkgName: String = "",

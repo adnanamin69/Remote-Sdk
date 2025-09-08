@@ -15,20 +15,13 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
 
-
-    }
-
-
-    defaultConfig {
-        externalNativeBuild {
-            cmake {
-                cppFlags += ""
-            }
-        }
         ndk {
-            abiFilters += listOf("armeabi-v7a", "arm64-v8a") // keep minimal
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
         }
+
     }
+
+
 
     externalNativeBuild {
         cmake {

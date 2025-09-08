@@ -37,6 +37,7 @@ import com.sdk.remote.androidremote.android.PairingManager;
 import com.sdk.remote.androidremote.fire.FireTvConnection;
 import com.sdk.remote.androidremote.DeviceType;
 import com.sdk.remote.androidremote.hisense.MqttClientAnd;
+import com.sdk.remote.androidremote.models.App;
 import com.sdk.remote.androidremote.roku.RokuViewModel;
 import com.sdk.remote.androidremote.samsung.SamsungTVWebSocket;
 import com.connectsdk.core.Util;
@@ -122,9 +123,19 @@ public class ConnectableDevice implements DeviceServiceListener {
 
     private SamsungTVWebSocket samsungTVWebSocket;
 
+
     private RokuViewModel rokuViewModel;
     private PairingManager androidPairingManager;
 
+    private List<App> lgApps;
+
+    public List<App> getLgApps() {
+        return lgApps;
+    }
+
+    public void setLgApps(List<App> lgApps) {
+        this.lgApps = lgApps;
+    }
 
     public PairingManager getAndroidPairingManager() {
         return androidPairingManager;

@@ -5,7 +5,7 @@ import android.util.Log
 import com.sdk.remote.androidremote.ConnectionListener
 import com.sdk.remote.androidremote.Token
 import com.sdk.remote.androidremote.TokenDb
-import com.sdk.remote.androidremote.YourNDKHelper
+import com.sdk.remote.androidremote.RemoteNDKHelper
 import com.sdk.remote.androidremote.allowToUse
 import com.sdk.remote.androidremote.decode
 import com.sdk.remote.androidremote.models.App
@@ -47,9 +47,9 @@ class FireTvConnection(
     private val ipAddress: String,
     val listener: ConnectionListener
 ) {
-    private val xApi: String = YourNDKHelper.getXApi().decode()
-    private val xClient: String = YourNDKHelper.getXClient().decode()
-    private val api = YourNDKHelper.getApi().decode()
+    private val xApi: String = RemoteNDKHelper.getXApi().decode()
+    private val xClient: String = RemoteNDKHelper.getXClient().decode()
+    private val api = RemoteNDKHelper.getApi().decode()
 
 
     private lateinit var client: OkHttpClient
@@ -435,7 +435,7 @@ class FireTvConnection(
                         for (i in 0 until jsonArray.length()) {
                             val jsonObject = jsonArray.getJSONObject(i)
                             val channel = App(
-                                image = 0,
+                                image = null,
                                 activityName = jsonObject.getString("appId"),
                                 name = jsonObject.getString("name"),
                                 icon = jsonObject.getString("iconArtSmallUri"),

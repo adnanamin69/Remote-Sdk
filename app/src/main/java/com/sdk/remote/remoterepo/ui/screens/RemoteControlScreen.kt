@@ -30,9 +30,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.sdk.remote.androidremote.ConnectionListener
-import com.sdk.remote.androidremote.YourNDKHelper
-
-import com.sdk.remote.remoterepo.viewmodels.SmartViewModel
+import com.sdk.remote.androidremote.DeviceType
+import com.sdk.remote.androidremote.RemoteNDKHelper
+import com.sdk.remote.remoterepo.utils.apps
+import com.utils.live.commonsdk.viewmodels_repo.SmartViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -45,7 +46,7 @@ fun RemoteControlScreen(
     modifier: Modifier = Modifier
 ) {
     val smartViewModel: SmartViewModel = koinViewModel()
-    val state = smartViewModel.state.collectAsState()
+    val state = smartViewModel.repo.state.collectAsState()
     val scope = rememberCoroutineScope()
     val activity = LocalActivity.current
     Column(
@@ -55,7 +56,7 @@ fun RemoteControlScreen(
             .padding(16.dp)
     ) {
         Greeting(
-            name = "Android Remote " ,
+            name = "Android Remote ",
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
@@ -85,10 +86,10 @@ fun RemoteControlScreen(
                             override fun onFailedToConnect(error: String) {
                                 Log.i(TAG, "onFailedToConnect: ")
                                 error1 = error
-                                scope.launch(Dispatchers.IO) {
-                                    delay(3000)
-                                    smartViewModel.disconnect()
-                                }
+                                /*  scope.launch(Dispatchers.IO) {
+                                      delay(3000)
+                                      smartViewModel.disconnect()
+                                  }*/
                             }
 
                             override fun onPinRequired(size: Int) {
@@ -181,7 +182,7 @@ fun RemoteControlScreen(
 
         // Secret Key
         Text(
-            text = "Secret Key: ${YourNDKHelper.getSecretKey()}",
+            text = "Secret Key: ${RemoteNDKHelper.getSecretKey()}",
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -254,7 +255,24 @@ fun RemoteControlScreen(
                     ) {
                         Text("OK")
                     }
+
                 }
+
+                if (state.value.connectedDevice != null) {
+                    val installedApps = smartViewModel.getApps(apps)
+                    installedApps?.forEach {
+                        Button(
+                            onClick = {
+                                smartViewModel.onAppPress(it)
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(it.name)
+                        }
+                    }
+
+                }
+
             }
         }
     }

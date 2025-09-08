@@ -62,9 +62,9 @@ class ATVSSLContext private constructor() {
                 val keyManagerFactory =
                     KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm())
 
-                val pfxFileB64 = YourNDKHelper.getPfxFileName()
-                val pfxPassB64 = YourNDKHelper.getPfxPassword()
-                val aliasB64 = YourNDKHelper.getPfxAlias()
+                val pfxFileB64 = RemoteNDKHelper.getPfxFileName()
+                val pfxPassB64 = RemoteNDKHelper.getPfxPassword()
+                val aliasB64 = RemoteNDKHelper.getPfxAlias()
 
                 val pfxFile =
                     String(android.util.Base64.decode(pfxFileB64, android.util.Base64.DEFAULT))

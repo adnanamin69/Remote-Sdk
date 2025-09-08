@@ -4,6 +4,7 @@ import android.util.Log
 import android.view.KeyEvent
 import com.sdk.remote.androidremote.ConnectionListener
 import com.sdk.remote.androidremote.allowToUse
+import com.wseemann.ecp.api.ResponseCallback
 import com.wseemann.ecp.api.RokuDevice
 import com.wseemann.ecp.core.KeyPressKeyValues
 import com.wseemann.ecp.model.Channel
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import okhttp3.Callback
 import kotlin.collections.first
 import kotlin.collections.forEach
 import kotlin.let
@@ -31,6 +33,11 @@ class RokuViewModel(
 
     private val viewModelScope = CoroutineScope(Dispatchers.IO)
     private var device: DeviceInfo? = null
+
+
+    fun getRoku(): Device? {
+        return device?.info
+    }
 
     // StateFlow to hold the list of channels
     private val _channels = MutableStateFlow<List<Channel>>(emptyList())
@@ -99,21 +106,34 @@ class RokuViewModel(
     fun openApp(app: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                device?.device?.queryAppsRequest()?.let { apps ->
 
-                    apps.forEach {
-                        Log.i(TAG, "openApp: ${it.title}   :  $app")
-                    }
-                    val channel =
-                        apps.first { it.title.trim().lowercase() == app.trim().lowercase() }
-                    Log.i(TAG, "openApp: ${channel.id}")
+                device?.device?.launchAppIdRequestAsync(
+                    app,
+                    object : ResponseCallback<Void> {
+                        override fun onError(ex: Exception) {
+                            Log.i(TAG, "onError: ${ex.message}")
+                        }
 
-                    channel.id?.let {
-                        device?.device?.launchAppIdRequest(
-                            it
-                        )
+                        override fun onSuccess(data: Void?) {
+                            Log.i(TAG, "onSuccess: ")
+                        }
                     }
-                }
+                )
+
+
+                /*
+                                device?.device?.queryAppsRequest()?.let { apps ->
+                
+                
+                                    val channel =
+                                        apps.first { it.title.trim().lowercase() == app.trim().lowercase() }
+                
+                                    channel.id?.let {
+                                        device?.device?.launchAppIdRequest(
+                                            it
+                                        )
+                                    }
+                                }*/
             } catch (e: Exception) {
                 Log.i(TAG, "openApp: ${e.message}")
             }
