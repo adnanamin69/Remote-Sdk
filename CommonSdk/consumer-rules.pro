@@ -5,3 +5,6 @@
 # This is generated automatically by the Android Gradle plugin.
 -dontwarn com.amazon.whisperlink.security.service.AuthDaemonInternal$Client$Factory
 -dontwarn com.amazon.whisperlink.security.service.AuthDaemonInternal$Iface
+
+
+-keep class com.connectsdk.**{ * ; }
