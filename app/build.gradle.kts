@@ -98,4 +98,7 @@ dependencies {
 
     implementation(libs.okhttp)
 
+    implementation("com.google.accompanist:accompanist-permissions:0.35.0-alpha")
+
+
 }

@@ -29,6 +29,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 import com.sdk.remote.androidremote.ConnectionListener
 import com.sdk.remote.androidremote.DeviceType
 import com.sdk.remote.androidremote.RemoteNDKHelper
@@ -38,8 +42,99 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import android.Manifest
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.utils.live.commonsdk.PcmAudioRecorder
+import org.koin.compose.koinInject
 
 private const val TAG = "RemoteControlScreen"
+
+@Composable
+fun MicrophonePermissionHandler() {
+    val context = LocalContext.current
+    val activity = LocalActivity.current
+
+    val smartViewModel: SmartViewModel = koinViewModel()
+    val state = smartViewModel.repo.state.collectAsState()
+
+    var showRationale by remember { mutableStateOf(false) }
+    var showSettings by remember { mutableStateOf(false) }
+
+    val pcmRecorder: PcmAudioRecorder = koinInject<PcmAudioRecorder>()
+
+    val scope = rememberCoroutineScope()
+    // Permission launcher
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            Toast.makeText(context, "Microphone permission granted ✅", Toast.LENGTH_SHORT).show()
+        } else {
+            if (!ActivityCompat.shouldShowRequestPermissionRationale(
+                    activity!!,
+                    Manifest.permission.RECORD_AUDIO
+                )
+            ) {
+                // Permanently denied
+                //  showSettings = true
+                Toast.makeText(context, "Show settings", Toast.LENGTH_SHORT).show()
+            } else {
+                // Denied once
+                Toast.makeText(context, "Denied", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    fun checkAndRequestPermission() {
+        when {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.RECORD_AUDIO
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED -> {
+                scope.launch {
+                    state.value.connectedDevice?.type?.let {
+                        pcmRecorder.recordPcmAudio(it) {
+                            smartViewModel.activateVoice()
+                            smartViewModel.senVoicePayload(it)
+                            smartViewModel.endVoice()
+
+                        }
+                    }
+                    Toast.makeText(context, "Already granted", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            ActivityCompat.shouldShowRequestPermissionRationale(
+                activity!!,
+                Manifest.permission.RECORD_AUDIO
+            ) -> {
+                permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+
+                Toast.makeText(context, "Show rational", Toast.LENGTH_SHORT).show()
+
+            }
+
+            else -> {
+                permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            }
+        }
+    }
+
+    // UI Button to trigger check
+    Column(Modifier.padding(16.dp)) {
+        Button(onClick = { checkAndRequestPermission() }) {
+            Text("Request Microphone Permission")
+        }
+    }
+}
+
 
 @Composable
 fun RemoteControlScreen(
@@ -258,6 +353,12 @@ fun RemoteControlScreen(
 
                 }
 
+
+
+
+                MicrophonePermissionHandler()
+
+
                 if (state.value.connectedDevice != null) {
                     val installedApps = smartViewModel.getApps(apps)
                     installedApps?.forEach {
@@ -277,6 +378,7 @@ fun RemoteControlScreen(
         }
     }
 }
+
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {

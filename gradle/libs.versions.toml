@@ -23,6 +23,7 @@ protobuf-plugin = "0.9.5"
 protobufJavalite = "4.32.0"
 aaraar = "0.1.2"
 kotlinxSerializationJson = "1.9.0"
+androidWaveRecorder = "2.1.0"
 
 
 
@@ -56,6 +57,7 @@ bcpkix-jdk15on = { module = "org.bouncycastle:bcpkix-jdk15on", version.ref = "bc
 roku-ecp-wrapper-kotlin = { module = "com.github.wseemann:roku-ecp-wrapper-kotlin", version.ref = "rokuEcpWrapperKotlin" }
 protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobufJavalite" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+android-wave-recorder = { module = "com.github.squti:Android-Wave-Recorder", version.ref = "androidWaveRecorder" }
 
 
 [plugins]

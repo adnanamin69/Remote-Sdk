@@ -80,6 +80,8 @@ dependencies {
     implementation(libs.koin.core)
     implementation(libs.koin.androidx.compose)
     implementation(libs.koin.android)
+    implementation(libs.android.wave.recorder)
+
 
 // Or the latest stable version
 }

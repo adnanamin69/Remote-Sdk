@@ -31,10 +31,10 @@ import com.sdk.remote.androidremote.models.App
 import com.sdk.remote.androidremote.roku.RokuViewModel
 import com.sdk.remote.androidremote.samsung.SamsungTVWebSocket
 import com.sdk.remote.androidremote.samsung.getCommand
-import com.utils.live.commonsdk.viewmodels_repo.TAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+private const val TAG = "Extentions"
 fun Context.isInternetConnection(): Boolean {
     val connectivityManager =
         getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
