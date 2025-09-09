@@ -43,9 +43,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import android.Manifest
+import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
@@ -354,7 +358,24 @@ fun RemoteControlScreen(
                 }
 
 
+                var text by remember {
+                    mutableStateOf("")
+                }
+                TextField(text, onValueChange = {
+                    if (it.length > text.length)
+                        smartViewModel.onSendText(it.last().toString())
+                    else if (it.length < text.length)
+                        smartViewModel.sendCommand(KeyEvent.KEYCODE_DEL)
+                    text = it
 
+
+                }, trailingIcon = {
+                    IconButton({
+                        smartViewModel.sendCommand(KeyEvent.KEYCODE_DEL)
+                    }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                    }
+                })
 
                 MicrophonePermissionHandler()
 

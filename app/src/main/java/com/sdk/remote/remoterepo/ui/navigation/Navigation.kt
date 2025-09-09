@@ -22,7 +22,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
 fun MainNavigation(
     remoteContent: @Composable () -> Unit
 ) {
-    var selectedScreen by remember { mutableStateOf<Screen>(Screen.Chat) }
+    var selectedScreen by remember { mutableStateOf<Screen>(Screen.Remote) }
 
     Scaffold(
         bottomBar = {

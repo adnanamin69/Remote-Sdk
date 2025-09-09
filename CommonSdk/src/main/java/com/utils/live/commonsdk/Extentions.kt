@@ -242,17 +242,21 @@ fun ConnectableDevice.sendCommand(key: Int) {
         DeviceType.LG -> lgButtonPress(key)
         DeviceType.ANDROID -> androidPairingManager?.remote?.sendKey(key)
         DeviceType.ROKU -> rokuViewModel?.keyPress(key)
-        DeviceType.HISENSE -> hisenseTvConnection?.sendKeyCode(key.toVidaaKeyCode())
+        DeviceType.HISENSE -> {
+            if (key == KeyEvent.KEYCODE_DEL)
+                hisenseTvConnection?.sendText(key.toVidaaKeyCode())
+            else
+                hisenseTvConnection?.sendKeyCode(key.toVidaaKeyCode())
+        }
     }
 }
 
 
-
- fun ConnectableDevice.launchRokuApp(app: App) {
+fun ConnectableDevice.launchRokuApp(app: App) {
     rokuViewModel.openApp(app.content)
 }
 
- fun ConnectableDevice.openLgApp(content: String) {
+fun ConnectableDevice.openLgApp(content: String) {
     getCapability(Launcher::class.java)
         ?.launchApp(
             content,
@@ -274,7 +278,7 @@ fun ConnectableDevice.sendCommand(key: Int) {
 }
 
 
- fun RokuViewModel.getIconURL(channelId: String): String {
+fun RokuViewModel.getIconURL(channelId: String): String {
     var url = ""
 
     try {
