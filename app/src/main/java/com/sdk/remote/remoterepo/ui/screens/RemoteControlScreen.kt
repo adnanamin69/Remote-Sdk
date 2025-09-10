@@ -98,12 +98,11 @@ fun MicrophonePermissionHandler() {
             ) == android.content.pm.PackageManager.PERMISSION_GRANTED -> {
                 scope.launch {
                     state.value.connectedDevice?.type?.let {
+                        smartViewModel.activateVoice()
                         pcmRecorder.recordPcmAudio(it) {
-                            smartViewModel.activateVoice()
                             smartViewModel.senVoicePayload(it)
-                            smartViewModel.endVoice()
-
                         }
+                        smartViewModel.endVoice()
                     }
                     Toast.makeText(context, "Already granted", Toast.LENGTH_SHORT).show()
                 }

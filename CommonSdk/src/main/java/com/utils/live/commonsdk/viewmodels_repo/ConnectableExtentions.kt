@@ -2,8 +2,12 @@ package com.utils.live.commonsdk.viewmodels_repo
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.util.Log
 import android.view.KeyEvent
+import androidx.core.content.getSystemService
 import com.connectsdk.core.AppInfo
 import com.sdk.remote.androidremote.ConnectionListener
 import com.sdk.remote.androidremote.DeviceType
@@ -306,4 +310,18 @@ fun RokuViewModel.getIconURL(channelId: String): String {
     }
 
     return url
+}
+
+
+
+fun Context.vibrate() {
+    val vibrator = getSystemService<Vibrator>()
+
+    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O)
+        vibrator?.vibrate(
+            VibrationEffect.createOneShot(
+                50,
+                VibrationEffect.DEFAULT_AMPLITUDE
+            )
+        )
 }

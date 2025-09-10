@@ -8,6 +8,9 @@ add_library(
         native-lib.cpp
 )
 
+# Set linker option to max page size = 16KB
+target_link_options(native-lib PRIVATE "-Wl,-z,max-page-size=16384")
+
 find_library(
         log-lib
         log

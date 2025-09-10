@@ -69,6 +69,7 @@ class SmartViewModel(
 
     override fun disconnect() {
         viewModelScope.launch {
+            application.vibrate()
 
             repo.state.value.connectedDevice?.disconnectNow()
             delay(1000)
@@ -81,14 +82,20 @@ class SmartViewModel(
 
     override fun pinCode(string: String) {
         repo.state.value.connectedDevice?.setPinCode(string)
+        application.vibrate()
+
     }
 
     override fun sendCommand(value: Int) {
+        application.vibrate()
+
         repo.state.value.connectedDevice?.sendCommand(value)
     }
 
     override fun onAppPress(app: App) {
         val state = repo.state
+
+        application.vibrate()
         when (state.value.connectedDevice?.type) {
             DeviceType.SAMSUNG -> {
                 // state.value.co nnectedDevice?.samsungTVWebSocket.requestInstalledApps()
