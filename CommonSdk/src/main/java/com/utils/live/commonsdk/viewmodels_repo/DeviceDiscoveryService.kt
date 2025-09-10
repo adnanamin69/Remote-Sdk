@@ -181,9 +181,7 @@ class DeviceDiscoveryService(
 
     override fun onDeviceUpdated(manager: DiscoveryManager?, device: ConnectableDevice?) {
         Log.i(TAG, "Device updated: ${device?.friendlyName} (${device?.ipAddress})")
-        manager?.compatibleDevices?.values?.distinctBy { it.ipAddress }?.sortedByDescending {
-            it.type == DeviceType.FIRE
-        }?.let { list ->
+        manager?.compatibleDevices?.values?.distinctBy { it.ipAddress }?.let { list ->
             Log.i(TAG, "Total devices discovered: ${list.size}")
             repository.setTvs(list)
         }
