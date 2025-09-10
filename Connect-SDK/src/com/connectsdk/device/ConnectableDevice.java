@@ -179,6 +179,17 @@ public class ConnectableDevice implements DeviceServiceListener {
         this.fireTvConnection = fireTvConnection;
     }
 
+
+    public boolean isSupportVoice() {
+        return type == DeviceType.ANDROID || type == DeviceType.FIRE;
+    }
+
+
+    public boolean isSupportKeyboard() {
+        return type == DeviceType.ANDROID || type == DeviceType.FIRE || type == DeviceType.ROKU || type == DeviceType.HISENSE;
+    }
+
+
     public ConnectableDevice() {
         services = new ConcurrentHashMap<String, DeviceService>();
     }

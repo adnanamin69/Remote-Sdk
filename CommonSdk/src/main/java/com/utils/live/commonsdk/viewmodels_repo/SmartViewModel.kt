@@ -120,7 +120,7 @@ class SmartViewModel(
             DeviceType.LG -> default.filter { app -> repo.state.value.connectedDevice?.lgApps?.any { it.name == app.name } == true }
             DeviceType.ROKU -> repo.state.value.connectedDevice?.rokuViewModel?.channels?.value?.map {
                 val icon = repo.state.value.connectedDevice?.rokuViewModel?.getIconURL(it.id) ?: ""
-                App(0, name = it.title, it.id, icon = icon)
+                App(null, name = it.title, it.id, icon = icon)
             }
 
             DeviceType.FIRE -> repo.state.value.connectedDevice?.fireTvConnection?.channelsList
