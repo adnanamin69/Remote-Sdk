@@ -1,16 +1,18 @@
 package com.utils.live.commonsdk.viewmodels_repo
 
 import android.app.Application
+import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import android.net.wifi.WifiManager
 import android.util.Log
-import com.sdk.remote.androidremote.DeviceType
 import com.connectsdk.device.ConnectableDevice
 import com.connectsdk.discovery.DiscoveryManager
 import com.connectsdk.discovery.DiscoveryManagerListener
 import com.connectsdk.service.command.ServiceCommandError
+import com.sdk.remote.androidremote.DeviceType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -19,9 +21,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.SocketException
-import android.content.Context
-import android.net.wifi.WifiManager
-import com.utils.live.commonsdk.isInternetConnection
 
 private const val TAG = "DeviceDiscoveryService"
 
@@ -174,8 +173,6 @@ class DeviceDiscoveryService(
                 else DeviceType.LG
 
             it
-        }?.sortedByDescending {
-            it.type == DeviceType.FIRE
         }?.let { list ->
             Log.i(TAG, "Total devices discovered: ${list.size}")
             repository.setTvs(list)

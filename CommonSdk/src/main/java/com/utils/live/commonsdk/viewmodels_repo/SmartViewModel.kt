@@ -11,10 +11,6 @@ import com.sdk.remote.androidremote.ConnectionListener
 import com.sdk.remote.androidremote.DeviceType
 import com.sdk.remote.androidremote.models.App
 import com.sdk.remote.androidremote.samsung.samsungId
-import com.utils.live.commonsdk.getIconURL
-import com.utils.live.commonsdk.launchRokuApp
-import com.utils.live.commonsdk.openLgApp
-import com.utils.live.commonsdk.sendCommand
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -152,9 +148,9 @@ class SmartViewModel(
                     text
                 )
 
-                DeviceType.SAMSUNG -> TODO()
-                DeviceType.LG -> TODO()
-                null -> TODO()
+                DeviceType.SAMSUNG -> {}
+                DeviceType.LG -> {}
+                null -> {}
             }
         } catch (ee: Exception) {
             Log.i("ATVRemote", "buttonPressed: ${ee.message}")

@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -287,11 +288,23 @@ fun RemoteControlScreen(
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
-                Text(
-                    text = "Remote Control",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+                Row {
+                    Text(
+                        text = "Remote Control",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    // Up Button
+                    Button(
+                        onClick = {
+                            smartViewModel.sendCommand(android.view.KeyEvent.KEYCODE_POWER)
+                        },
+                    ) {
+                        Text("Power")
+                    }
+
+                }
 
                 Box(
                     modifier = Modifier

@@ -15,13 +15,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
-import okhttp3.Callback
-import kotlin.collections.first
-import kotlin.collections.forEach
-import kotlin.let
-import kotlin.text.lowercase
-import kotlin.text.trim
 
 
 private const val TAG = "RokuViewModel"
@@ -61,21 +54,9 @@ class RokuViewModel(
         }
     }
 
-    suspend fun queryIconRequest(id: String): ByteArray? {
-        return withContext(Dispatchers.IO) {
-            try {
-                withTimeout(1000) { // Timeout to prevent hanging
-                    device?.device?.queryIconRequest(id)
-                }
-            } catch (e: Exception) {
-                Log.i(TAG, "queryIconRequest: ${e.message}")
-                null
-            }
-        }
-    }
-
     fun keyPress(key1: Int) {
-        val key = key1.rokuKey()
+
+        val key = if (key1 == KeyEvent.KEYCODE_POWER) powerOnOff() else key1.rokuKey()
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 if (allowToUse())
@@ -155,6 +136,19 @@ class RokuViewModel(
         }
     }
 
+    fun powerOnOff(): KeyPressKeyValues {
+        val powerMode =
+            device?.info?.powerMode == KeyPressKeyValues.POWER_ON.value
+
+        if (powerMode) {
+            device?.info?.powerMode = KeyPressKeyValues.POWER_OFF.value
+            return KeyPressKeyValues.POWER_OFF
+
+        } else {
+            device?.info?.powerMode = KeyPressKeyValues.POWER_ON.value
+            return KeyPressKeyValues.POWER_ON
+        }
+    }
 }
 
 
@@ -182,6 +176,7 @@ private fun Int.rokuKey(): KeyPressKeyValues {
         KeyEvent.KEYCODE_MEDIA_REWIND -> KeyPressKeyValues.LEFT
         KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> KeyPressKeyValues.RIGHT
         KeyEvent.KEYCODE_DEL -> KeyPressKeyValues.BACKSPACE
+        KeyEvent.KEYCODE_POWER -> KeyPressKeyValues.POWER_OFF
         else -> {
             KeyPressKeyValues.INPUTTUNER
         }

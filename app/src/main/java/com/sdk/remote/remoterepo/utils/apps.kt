@@ -1,6 +1,5 @@
 package com.sdk.remote.remoterepo.utils
 
-import com.sdk.remote.androidremote.R
 import com.sdk.remote.androidremote.models.App
 
 val apps = listOf(
