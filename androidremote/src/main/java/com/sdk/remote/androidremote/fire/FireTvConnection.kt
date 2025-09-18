@@ -3,16 +3,15 @@ package com.sdk.remote.androidremote.fire
 import android.content.Context
 import android.util.Log
 import com.sdk.remote.androidremote.ConnectionListener
+import com.sdk.remote.androidremote.RemoteNDKHelper
 import com.sdk.remote.androidremote.Token
 import com.sdk.remote.androidremote.TokenDb
-import com.sdk.remote.androidremote.RemoteNDKHelper
 import com.sdk.remote.androidremote.allowToUse
 import com.sdk.remote.androidremote.decode
 import com.sdk.remote.androidremote.models.App
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -31,16 +30,20 @@ import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
-import kotlin.apply
-import kotlin.collections.any
-import kotlin.let
-import kotlin.ranges.until
-import kotlin.text.isEmpty
-import kotlin.text.isNotEmpty
-import kotlin.text.isNullOrEmpty
-import kotlin.toString
 
 private const val TAG = "PinConnectionUtils"
+
+private fun logD(message: String) {
+    Log.d(TAG, message)
+}
+
+private fun logI(message: String) {
+    Log.i(TAG, message)
+}
+
+private fun logE(message: String) {
+    Log.e(TAG, message)
+}
 
 class FireTvConnection(
     val activity: Context,
@@ -54,7 +57,7 @@ class FireTvConnection(
 
     private lateinit var client: OkHttpClient
     private lateinit var sslContext: SSLContext
-    public val channelsList = mutableListOf<App>()
+    val channelsList = mutableListOf<App>()
 
     private val tokenDb by lazy {
         TokenDb(activity, Token.FireTv)
@@ -109,6 +112,67 @@ class FireTvConnection(
     }
 
 
+    // ---------- Helpers (URLs, Bodies, Guards, Requests) ----------
+
+    private val jsonMediaType = "application/json; charset=utf-8".toMediaType()
+
+    private fun buildHttpsUrl(path: String): String = "https://$ipAddress:8080$path"
+
+    private fun emptyBody(): RequestBody = "".toRequestBody(jsonMediaType)
+
+    private fun jsonBody(json: JSONObject): RequestBody =
+        json.toString().toRequestBody(jsonMediaType)
+
+    private fun ensureIp(context: String): Boolean {
+        if (ipAddress.isEmpty()) {
+            logE("$context:<---Activity OR IP null---> $ipAddress")
+            return false
+        }
+        return true
+    }
+
+    private fun getClientTokenOrNull(context: String): String? {
+        val token = tokenDb.getToken()
+        if (token.isNullOrEmpty()) {
+            logE("$context:<---Missing token--->")
+            return null
+        }
+        return token
+    }
+
+    private fun enqueue(
+        url: String,
+        method: String = "GET",
+        body: RequestBody? = null,
+        includeClientHeader: Boolean = false,
+        clientHeaderName: String = xClient,
+        onResponse: (Response) -> Unit,
+        onFailure: (IOException) -> Unit = { e ->
+            Log.e(
+                TAG,
+                "enqueue:<---Failure---> ${e.message}"
+            )
+        }
+    ) {
+        val builder = Request.Builder().url(url).addHeader(xApi, api)
+
+        if (includeClientHeader) {
+            val token = getClientTokenOrNull("enqueue") ?: return
+            builder.addHeader(clientHeaderName, token)
+        }
+
+        when (method) {
+            "POST" -> builder.post(body ?: emptyBody())
+            else -> builder.get()
+        }
+
+        client.newCall(builder.build()).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) = onFailure(e)
+            override fun onResponse(call: Call, response: Response) = onResponse(response)
+        })
+    }
+
+
     private fun trustCertificate() {
         val trustAllCerts = arrayOf<TrustManager>(
             object : X509TrustManager {
@@ -132,7 +196,7 @@ class FireTvConnection(
                 init(null, trustAllCerts, SecureRandom())
             }
         } catch (e: Exception) {
-            Log.e(TAG, "trustCertificate: Exception in TrustCertificate: ${e.message}")
+            logE("trustCertificate: Exception in TrustCertificate: ${e.message}")
         }
         client = OkHttpClient.Builder()
             .connectTimeout(60, TimeUnit.SECONDS)
@@ -144,27 +208,24 @@ class FireTvConnection(
     }
 
     fun checkFirstTime() {
-        if (ipAddress.isEmpty()) {
-            Log.e(TAG, "checkFirstTime: Activity or IP is null/empty: $ipAddress")
-            return
-        }
+        if (!ensureIp("checkFirstTime")) return
 
         try {
             val url = "http://$ipAddress:8009/apps/FireTVRemote" // Endpoint path
             val request = Request.Builder()
                 .url(url)
-                .post(RequestBody.create(null, ByteArray(0)))
+                .post(ByteArray(0).toRequestBody(null))
                 .build()
 
             client.newCall(request).enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
-                    Log.e(TAG, "onFailure: CheckFirstTime failed: ${e.message}")
+                    logE("onFailure: CheckFirstTime failed: ${e.message}")
                 }
 
                 override fun onResponse(call: Call, response: Response) {
                     if (response.isSuccessful) {
-                        Log.d(TAG, "onResponse: CheckFirstTime successful")
-                        Log.d(TAG, "onResponse: $response")
+                        logD("onResponse: CheckFirstTime successful")
+                        logD("onResponse: $response")
                         // Handle successful response logic
                         if (tokenDb.getToken() == null)
                             displayPin()
@@ -173,136 +234,90 @@ class FireTvConnection(
                             fetchApps()
                         }
                     } else {
-                        Log.e(TAG, "onResponse: CheckFirstTime failed with code: ${response.code}")
+                        logE("onResponse: CheckFirstTime failed with code: ${response.code}")
                     }
                 }
             })
         } catch (e: Exception) {
-            Log.e(TAG, "checkFirstTime: Exception in checkFirstTime: ${e.message}")
+            logE("checkFirstTime: Exception in checkFirstTime: ${e.message}")
         }
     }
 
 
     private fun displayPin() {
-        if (ipAddress.isEmpty()) {
-            Log.e(TAG, "displayPin:<--- IP null---> $ipAddress")
-            return
-        }
+        if (!ensureIp("displayPin")) return
 
         val jSONObject = JSONObject()
         try {
             jSONObject.put("friendlyName", "Fire Stick Remote")
         } catch (e: Exception) {
-            Log.e(TAG, "displayPin:<--- Exception while putting JSON---> ${e.message}")
+            logE("displayPin:<--- Exception while putting JSON---> ${e.message}")
         }
 
-        val requestBody = RequestBody.create(
-            "application/json; charset=utf-8".toMediaTypeOrNull(),
-            jSONObject.toString()
-        )
+        val url = buildHttpsUrl("/v1/FireTV/pin/display")
+        enqueue(url, method = "POST", body = jsonBody(jSONObject), onResponse = { response ->
+            try {
+                val responseJson = JSONObject(response.body?.string() ?: "")
+                logD("onResponse:<---DisplayPin Response--->  $responseJson\n<---Response Code--->${response.code}")
 
-        val request = Request.Builder()
-            .url("https://$ipAddress:8080/v1/FireTV/pin/display")
-            .post(requestBody)
-            .addHeader(xApi, api)
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onResponse(call: Call, response: Response) {
-                try {
-                    val responseJson = JSONObject(response.body?.string() ?: "")
-                    Log.d(
-                        TAG,
-                        "onResponse:<---DisplayPin Response--->  $responseJson\n<---Response Code--->${response.code}"
-                    )
-
-                    if (response.code < 200 || response.code >= 300) {
-                        Log.e(TAG, "Display PIN failed. Response code: ${response.code}")
-                        return
-                    }
-
-                    if (responseJson.getString("description") == "OK") {
-                        Log.d(TAG, "PIN displayed successfully.")
-                        listener.onPinRequired(4)
-
-                        // showPin.invoke(true)
-                    } else {
-                        Log.e(TAG, "DisplayPin: Unknown response description.")
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "onResponse:<---Exception in Response---> ${e.message}")
+                if (response.code < 200 || response.code >= 300) {
+                    logE("Display PIN failed. Response code: ${response.code}")
+                    return@enqueue
                 }
-            }
 
-            override fun onFailure(call: Call, e: IOException) {
-                Log.e(TAG, "onFailure:<---DisplayPin---> ${e.message}")
+                if (responseJson.getString("description") == "OK") {
+                    logD("PIN displayed successfully.")
+                    listener.onPinRequired(4)
+
+                    // showPin.invoke(true)
+                } else {
+                    logE("DisplayPin: Unknown response description.")
+                }
+            } catch (e: Exception) {
+                logE("onResponse:<---Exception in Response---> ${e.message}")
             }
-        })
+        }, onFailure = { e -> logE("onFailure:<---DisplayPin---> ${e.message}") })
     }
 
 
     fun verifyPin(pinCode: String) {
-        if (ipAddress.isEmpty()) {
-            Log.e(TAG, "verifyPin:<---IP null---> $ipAddress")
-            return
-        }
+        if (!ensureIp("verifyPin")) return
 
         val jsonObject = JSONObject().apply {
             put("pin", pinCode)
         }
 
-        val requestBody = RequestBody.create(
-            "application/json; charset=utf-8".toMediaType(),
-            jsonObject.toString()
-        )
+        val url = buildHttpsUrl("/v1/FireTV/pin/verify")
+        enqueue(url, method = "POST", body = jsonBody(jsonObject), onResponse = { response ->
+            try {
+                val body = response.body?.string()
+                logD("onResponse:<---FireStick VerifyPin Response---> $response\n<---Response Code---> ${response.code}")
+                val description = JSONObject(body).getString("description")
 
 
-        val request = Request.Builder()
-            .url("https://$ipAddress:8080/v1/FireTV/pin/verify")
-            .post(requestBody)
-            .addHeader(xApi, api)
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onResponse(call: Call, response: Response) {
-                try {
-                    val body = response.body?.string()
-                    Log.d(
-                        TAG,
-                        "onResponse:<---FireStick VerifyPin Response---> $response\n<---Response Code---> ${response.code}"
-                    )
-                    val description = JSONObject(body).getString("description")
-
-
-                    if (response.code < 200 || response.code >= 300 || description.isNullOrEmpty()) {
-                        listener.onFailedToConnect("Pairing Failed")
-
-                        Log.e(TAG, "verifyPin failed with response code: ${response.code}")
-                        // Log additional failure details as needed
-                    } else {
-                        Log.d(TAG, "onResponse:<---FireStick Generated Token---> $description")
-                        // Additional logging or actions based on success can go here
-                        tokenDb.saveToken(description)
-                        // callback.invoke("Pairing Successful")
-
-                        listener.onConnect()
-                        fetchApps()
-
-                        // 0kFk4yc
-                        //  wUVTuVY
-                    }
-                } catch (e: Exception) {
+                if (response.code < 200 || response.code >= 300 || description.isNullOrEmpty()) {
                     listener.onFailedToConnect("Pairing Failed")
 
-                    Log.e(TAG, "onResponse:<---Exception in VerifyPin---> ${e.message}")
+                    logE("verifyPin failed with response code: ${response.code}")
+                    // Log additional failure details as needed
+                } else {
+                    logD("onResponse:<---FireStick Generated Token---> $description")
+                    // Additional logging or actions based on success can go here
+                    tokenDb.saveToken(description)
+                    // callback.invoke("Pairing Successful")
+
+                    listener.onConnect()
+                    fetchApps()
+
+                    // 0kFk4yc
+                    //  wUVTuVY
                 }
-            }
+            } catch (e: Exception) {
+                listener.onFailedToConnect("Pairing Failed")
 
-            override fun onFailure(call: Call, e: IOException) {
-                Log.e(TAG, "onFailure:<---FireStick VerifyPin---> ${e.message}")
-
+                logE("onResponse:<---Exception in VerifyPin---> ${e.message}")
             }
-        })
+        }, onFailure = { e -> logE("onFailure:<---FireStick VerifyPin---> ${e.message}") })
     }
 
     fun fireCommand(str2: String) {
@@ -313,179 +328,129 @@ class FireTvConnection(
     }
 
     private fun fireCommand(str2: String, str3: String) {
-        if (ipAddress.isEmpty()) {
-            Log.e(TAG, "fireCommand:<---Activity OR IP null---> $ipAddress")
-            return
-        }
+        if (!ensureIp("fireCommand")) return
 
-        val clientToken = tokenDb.getToken()
+        val clientToken = getClientTokenOrNull("fireCommand") ?: return
 
         val jsonObject = JSONObject().apply {
             try {
                 put("keyActionType", str3)
             } catch (e: JSONException) {
-                Log.e(TAG, "keyboardText:<---Exception---> " + e.message)
+                logE("keyboardText:<---Exception---> " + e.message)
             }
         }
 
-        if (str2.isEmpty() || clientToken == null) {
+        if (str2.isEmpty()) return
 
-            return
-        }
+        val url = buildHttpsUrl("/v1/FireTV?action=$str2")
+        val body: RequestBody = if (str3.isEmpty()) emptyBody() else jsonBody(jsonObject)
 
-        val requestBody: RequestBody = if (str3.isEmpty()) {
-            RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), "")
-        } else {
-            RequestBody.create(
-                "application/json; charset=utf-8".toMediaTypeOrNull(),
-                jsonObject.toString()
-            )
-        }
-
-        // Create the request with custom headers and query parameters
-        val request = Request.Builder()
-            .url("https://$ipAddress:8080/v1/FireTV?action=$str2")  // Add the action as a query parameter
-            .post(requestBody)
-            .addHeader(xApi, api)  // Static API key
-            .addHeader(
-                "x-client-token",
-                clientToken
-            )  // Dynamic client token from SharedPreferences
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onResponse(call: Call, response: Response) {
+        enqueue(
+            url = url,
+            method = "POST",
+            body = body,
+            includeClientHeader = true,
+            clientHeaderName = "x-client-token",
+            onResponse = { response ->
                 try {
                     val body = response.body?.string()
-                    Log.d(
-                        TAG,
-                        "onResponse:<---FireCommand Success---> Command: $str2 keyAction: $str3\n$body<---Response Code--->${response.code}"
-                    )
+                    logD("onResponse:<---FireCommand Success---> Command: $str2 keyAction: $str3\n$body<---Response Code--->${response.code}")
 
                     if (response.code in 200..299) {
                         if (str3 != "keyUp") {
-                            Log.d(TAG, "onResponse:fireCommand<---KeyAction Down---> $str3")
+                            logD("onResponse:fireCommand<---KeyAction Down---> $str3")
                         } else {
-                            Log.d(TAG, "onResponse:fireCommand<---KeyAction Up---> $str3")
+                            logD("onResponse:fireCommand<---KeyAction Up---> $str3")
                         }
                         // Add your Firebase logging here (for success)
                     } else {
 
 
                         if (str3 != "keyUp") {
-                            Log.d(TAG, "onResponse:<---KeyAction Down--->$str3")
+                            logD("onResponse:<---KeyAction Down--->$str3")
                         }
                         // Add your Firebase logging here (for failure)
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "onResponse:<---Exception in FireCommand---> ${e.message}")
+                    logE("onResponse:<---Exception in FireCommand---> ${e.message}")
                 }
-            }
-
-            override fun onFailure(call: Call, e: IOException) {
-                Log.e(TAG, "onFailure:<---FireCommand Failure---> ${e.message}")
-                // Add your connection lost dialog or retry logic here
+            },
+            onFailure = { e ->
+                logE("onFailure:<---FireCommand Failure---> ${e.message}")
                 if (str3 != "keyUp" && str3.isNotEmpty()) {
-                    Log.d(TAG, "onFailure:fireCommand<---KeyAction Down--->$str3")
+                    logD("onFailure:fireCommand<---KeyAction Down--->$str3")
                 } else {
-                    Log.d(TAG, "onFailure:fireCommand<---KeyAction Up--->$str3")
+                    logD("onFailure:fireCommand<---KeyAction Up--->$str3")
                 }
             }
-        })
+        )
     }
 
 
     private fun fetchApps() {
 
-        val clientToken = tokenDb.getToken()
+        val clientToken = getClientTokenOrNull("fetchApps") ?: return
+        if (!ensureIp("fetchApps")) return
 
-        if (ipAddress.isEmpty() || clientToken.isNullOrEmpty()) {
-            println("fetchApps: <---Activity OR IP null---> $ipAddress")
-            return
-        }
-
-        val url = "https://$ipAddress:8080/v1/FireTV/apps"
-        val request = Request.Builder()
-            .url(url)
-            .addHeader(xApi, api)
-            .addHeader(xClient, clientToken)
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                println("fetchApps: <---Failure---> ${e.message}")
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                if (!response.isSuccessful) {
-                    println("fetchApps: <---Failed Response Code---> ${response.code}")
-                    if (response.code == 403) {
-                        tokenDb.resetToken()
-                        listener.onDisconnect()
-                        //    displayPin(showPin)
-                        //   showPin.invoke(PinState.IDEAL)
-                    }
-                    return
+        val url = buildHttpsUrl("/v1/FireTV/apps")
+        enqueue(url, includeClientHeader = true, onResponse = { response ->
+            if (!response.isSuccessful) {
+                println("fetchApps: <---Failed Response Code---> ${response.code}")
+                if (response.code == 403) {
+                    tokenDb.resetToken()
+                    listener.onDisconnect()
+                    //    displayPin(showPin)
+                    //   showPin.invoke(PinState.IDEAL)
                 }
-                response.body.string().let { responseBody ->
-                    try {
-                        val jsonArray = JSONArray(responseBody)
-                        println("fetchApps: <---Success Response---> $jsonArray")
+                return@enqueue
+            }
+            response.body.string().let { responseBody ->
+                try {
+                    val jsonArray = JSONArray(responseBody)
+                    println("fetchApps: <---Success Response---> $jsonArray")
 
-                        for (i in 0 until jsonArray.length()) {
-                            val jsonObject = jsonArray.getJSONObject(i)
-                            val channel = App(
-                                image = null,
-                                activityName = jsonObject.getString("appId"),
-                                name = jsonObject.getString("name"),
-                                icon = jsonObject.getString("iconArtSmallUri"),
-                                pkgName = jsonObject.getString("appId"),
-                                content = "",
-                                id = "",
-                                url = ""
-                            )
-                            if (!channelsList.any { it.activityName == channel.activityName })
-                                channelsList.add(channel)
-                        }
-
-                        println("fetchApps: <---Parsed Channels---> $channelsList")
-                    } catch (e: Exception) {
-                        println("fetchApps: <---Exception in Parsing Response---> ${e.message}")
+                    for (i in 0 until jsonArray.length()) {
+                        val jsonObject = jsonArray.getJSONObject(i)
+                        val channel = App(
+                            image = null,
+                            activityName = jsonObject.getString("appId"),
+                            name = jsonObject.getString("name"),
+                            icon = jsonObject.getString("iconArtSmallUri"),
+                            pkgName = jsonObject.getString("appId"),
+                            content = "",
+                            id = "",
+                            url = ""
+                        )
+                        if (!channelsList.any { it.activityName == channel.activityName })
+                            channelsList.add(channel)
                     }
+
+                    println("fetchApps: <---Parsed Channels---> $channelsList")
+                } catch (e: Exception) {
+                    println("fetchApps: <---Exception in Parsing Response---> ${e.message}")
                 }
             }
-        })
+        }, onFailure = { e -> println("fetchApps: <---Failure---> ${e.message}") })
     }
 
 
     fun launchApps(packageName: String) {
 
-        val clientToken = tokenDb.getToken()
-        if (ipAddress.isEmpty() || clientToken.isNullOrEmpty()) {
-            println("launchApps: <---Activity OR IP null---> $ipAddress")
-            return
-        }
+        val clientToken = getClientTokenOrNull("launchApps") ?: return
+        if (!ensureIp("launchApps")) return
 
-        val url = "https://$ipAddress:8080/v1/FireTV/app/$packageName"
-        val requestBody = "".toRequestBody("application/json; charset=utf-8".toMediaType())
-
-        val request = Request.Builder()
-            .url(url)
-            .addHeader(xApi, api)
-            .addHeader(xClient, clientToken)
-            .post(requestBody)
-            .build()
+        val url = buildHttpsUrl("/v1/FireTV/app/$packageName")
         if (allowToUse())
-            client.newCall(request).enqueue(object : Callback {
-                override fun onFailure(call: Call, e: IOException) {
-                    println("launchApps: <---Failure---> ${e.message}")
-                }
-
-                override fun onResponse(call: Call, response: Response) {
+            enqueue(
+                url,
+                method = "POST",
+                body = emptyBody(),
+                includeClientHeader = true,
+                onResponse = { response ->
                     if (!response.isSuccessful) {
                         println("launchApps: <---Failed Response Code---> ${response.code}")
                         println("launchApps: <---Failed Response Code---> ${response.message}")
-                        return
+                        return@enqueue
                     }
 
                     response.body?.string()?.let { responseBody ->
@@ -496,128 +461,80 @@ class FireTvConnection(
                             println("launchApps: <---Exception in Parsing Response---> ${e.message}")
                         }
                     }
-                }
-            })
+                },
+                onFailure = { e -> println("launchApps: <---Failure---> ${e.message}") })
         else Log.i("Command", " fire sendKey: socket error")
 
     }
 
 
     fun fireText(str2: String) {
-        if (ipAddress.isEmpty()) {
-            Log.e(TAG, "fireCommand:<---Activity OR IP null---> $ipAddress")
-            return
-        }
+        if (!ensureIp("fireText")) return
 
-        val clientToken = tokenDb.getToken()
+        val clientToken = getClientTokenOrNull("fireText") ?: return
 
         val jsonObject = JSONObject().apply {
             try {
                 put("text", str2)
             } catch (e: JSONException) {
-                Log.e(
-                    TAG,
+                logE(
                     "keyboardText:<---Exception---> " + e.message
                 )
             }
         }
 
-        if (str2.isEmpty() || clientToken == null) {
+        if (str2.isEmpty()) return
 
-            return
-        }
+        val requestBody: RequestBody = jsonBody(jsonObject)
 
-        val requestBody: RequestBody =
-            RequestBody.create(
-                "application/json; charset=utf-8".toMediaTypeOrNull(),
-                jsonObject.toString()
-            )
-
-
-        // Create the request with custom headers and query parameters
-        val request = Request.Builder()
-            .url("https://$ipAddress:8080/v1/FireTV/text")  // Add the action as a query parameter
-            .post(requestBody)
-            .addHeader(xApi, api)  // Static API key
-            .addHeader(
-                "x-client-token",
-                clientToken
-            )  // Dynamic client token from SharedPreferences
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onResponse(call: Call, response: Response) {
+        val url = buildHttpsUrl("/v1/FireTV/text")
+        enqueue(
+            url,
+            method = "POST",
+            body = requestBody,
+            includeClientHeader = true,
+            clientHeaderName = "x-client-token",
+            onResponse = { response ->
                 try {
                     val body = response.body?.string()
-                    Log.d(
-                        TAG,
-                        "onResponse:<---FireCommand Success---> Command: $str2 keyAction: $str2\n$body<---Response Code--->${response.code}"
-                    )
+                    logD("onResponse:<---FireCommand Success---> Command: $str2 keyAction: $str2\n$body<---Response Code--->${response.code}")
 
                 } catch (e: Exception) {
-                    Log.e(
-                        TAG,
-                        "onResponse:<---Exception in FireCommand---> ${e.message}"
-                    )
+                    logE("onResponse:<---Exception in FireCommand---> ${e.message}")
                 }
-            }
-
-            override fun onFailure(call: Call, e: IOException) {
-                Log.e(
-                    TAG,
-                    "onFailure:<---FireCommand Failure---> ${e.message}"
-                )
-
-            }
-        })
+            },
+            onFailure = { e ->
+                logE("onFailure:<---FireCommand Failure---> ${e.message}")
+            })
     }
 
 
     fun fireVoice(action: String = "start") {
-        if (ipAddress.isEmpty()) {
-            Log.e(TAG, "fireVoice:<---Activity OR IP null---> $ipAddress")
-            return
-        }
-
-        val clientToken = tokenDb.getToken()
-        if (clientToken == null) {
-            Log.e(TAG, "fireVoice:<---Missing token or empty audio--->")
-            return
-        }
+        if (!ensureIp("fireVoice")) return
+        val clientToken = getClientTokenOrNull("fireVoice") ?: return
 
 
         // val requestBody = audioBytes.toRequestBody("audio/pcm".toMediaTypeOrNull())
 
-        val requestBody =
-            RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), "")
+        val requestBody = emptyBody()
 
-        val request = Request.Builder()
-            .url("https://$ipAddress:8080/v1/FireTV/voiceCommand?action=$action") // action=voice
-            .post(requestBody)
-            .addHeader(xApi, api)
-            .addHeader(xClient, clientToken)
-            //   .addHeader("Content-Type", "audio/pcm")  // Make sure it matches actual format
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onResponse(call: Call, response: Response) {
+        val url = buildHttpsUrl("/v1/FireTV/voiceCommand?action=$action")
+        enqueue(
+            url,
+            method = "POST",
+            body = requestBody,
+            includeClientHeader = true,
+            onResponse = { response ->
                 try {
                     val body = response.body?.string()
-                    Log.d(
-                        TAG,
-                        "onResponse:<---FireVoice Success--->\n$body<---Response Code--->${response.code}"
-                    )
+                    logD("onResponse:<---FireVoice Success--->\n$body<---Response Code--->${response.code}")
                 } catch (e: Exception) {
-                    Log.e(TAG, "onResponse:<---Exception in FireVoice---> ${e.message}")
-                    Log.i(TAG, "onResponse: $e")
+                    logE("onResponse:<---Exception in FireVoice---> ${e.message}")
+                    logI("onResponse: $e")
 
                 }
-            }
-
-            override fun onFailure(call: Call, e: IOException) {
-                Log.e(TAG, "onFailure:<---FireVoice Failure---> ${e.message}")
-            }
-        })
+            },
+            onFailure = { e -> logE("onFailure:<---FireVoice Failure---> ${e.message}") })
     }
 
 
@@ -631,6 +548,6 @@ class FireTvConnection(
 
 
 fun println(str: String) {
-    Log.d(TAG, "println: $str")
+    logD("println: $str")
 }
 

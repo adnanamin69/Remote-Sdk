@@ -364,7 +364,8 @@ Java_com_sdk_remote_androidremote_RemoteNDKHelper_getAllowedPackages(JNIEnv *env
             "dW5pdmVyc2FsLnR2LnJlbW90ZS5jb250cm9sLnNjcmVlbi5jYXN0aW5n",
             "amlsYW4uc21hcnR0di5yZW1vdGUudW5pdmVyc2Fs",//new client remote
             "Y29tLmZpcmUudHYuc3RpY2sucmVtb3RlLmNvbnRyb2w=",//fire shams
-            "Y29tLnR2LnJlbW92ZS5jb250cm9sLnJva3VfdHY="//roku shams
+            "Y29tLnR2LnJlbW92ZS5jb250cm9sLnJva3VfdHY=",//roku shams
+            "Y29tLmFuZHJvaWR0di5zbWFydHR2LnVuaXZlcnNhbHR2cmVtb3RlLmFsbHR2cmVtb3RlY29udHJvbC5jYXN0dG90di50dnJlbW90ZQ=="//client naik
 
     };
     size_t count = sizeof(pkgs) / sizeof(pkgs[0]);
