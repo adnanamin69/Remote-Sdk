@@ -186,7 +186,7 @@ public class ConnectableDevice implements DeviceServiceListener {
 
 
     public boolean isSupportKeyboard() {
-        return type == DeviceType.ANDROID || type == DeviceType.FIRE || type == DeviceType.ROKU || type == DeviceType.HISENSE;
+        return type == DeviceType.ANDROID || type == DeviceType.FIRE || type == DeviceType.ROKU || type == DeviceType.HISENSE || type == DeviceType.LG;
     }
 
 

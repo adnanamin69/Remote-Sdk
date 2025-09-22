@@ -74,5 +74,4 @@ dependencies {
     implementation 'net.i2p.crypto:eddsa:0.3.0'
 
 
-
 }

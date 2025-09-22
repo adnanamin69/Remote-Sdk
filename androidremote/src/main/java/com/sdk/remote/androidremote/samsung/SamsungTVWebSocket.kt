@@ -138,10 +138,17 @@ class SamsungTVWebSocket(
         println("Message from TV: $text")
         val token = extractTokenFromMessage(text)
         //   showPairCallBack.invoke(false)
-        connectionListener.onConnect()
+
+
+        if (text.contains("ms.channel.connect"))
+            connectionListener.onConnect()
+        else if (text.contains("ms.channel.unauthorized"))
+            connectionListener.onFailedToConnect("Please allow access from settings in the tv")
+
         Log.i(TAG, "onMessage: $token")
         if (!token.isNullOrEmpty()) {
             saveToken(token)
+            connectionListener.onConnect()
         }
     }
 

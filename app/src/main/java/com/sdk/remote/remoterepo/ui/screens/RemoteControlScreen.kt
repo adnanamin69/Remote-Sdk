@@ -388,6 +388,11 @@ fun RemoteControlScreen(
                 if (state.value.connectedDevice != null) {
                     val installedApps = smartViewModel.getApps(apps)
                     installedApps?.forEach {
+
+
+
+
+
                         Button(
                             onClick = {
                                 smartViewModel.onAppPress(it)

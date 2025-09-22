@@ -152,11 +152,14 @@ class PairingManager(
             }
 
             override fun onError(error: Throwable) {
-                Log.i("ATVRemote", "onError: ${error.message}")
-                connectionListener.onFailedToConnect(error.message ?: "Failed to connect")
+                if (!isConnected) {
+                    Log.i("ATVRemote", "onError: ${error.message}")
+                    connectionListener.onFailedToConnect(error.message ?: "Failed to connect")
+                }
             }
 
             override fun onUnpaired() {
+
                 connectionListener.onDisconnect()
                 isConnected = false
             }
@@ -194,7 +197,18 @@ class PairingManager(
     }
 
     fun finishPairing(code: String) {
+
+
         scope.launch {
+
+            // check if all characters in code are the same
+            if (code.isNotEmpty() && code.all { it == code[0] }) {
+                connectionListener.pinError("Invalid Pin Code")
+                socket?.flush()
+                socket?.close()
+                return@launch
+            }
+
             val one = PAIRING_MSG_HEADER
             val two: ByteArray?
             try {

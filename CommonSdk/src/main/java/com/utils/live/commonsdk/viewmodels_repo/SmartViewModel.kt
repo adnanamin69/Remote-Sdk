@@ -6,7 +6,10 @@ import android.view.KeyEvent
 import androidx.annotation.Keep
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.connectsdk.core.TextInputStatusInfo
 import com.connectsdk.device.ConnectableDevice
+import com.connectsdk.service.capability.TextInputControl
+import com.connectsdk.service.command.ServiceCommandError
 import com.sdk.remote.androidremote.ConnectionListener
 import com.sdk.remote.androidremote.DeviceType
 import com.sdk.remote.androidremote.models.App
@@ -124,7 +127,7 @@ class SmartViewModel(
     override fun getApps(default: List<App>): List<App>? {
         return when (repo.state.value.connectedDevice?.type) {
             DeviceType.ANDROID, DeviceType.SAMSUNG -> default
-            DeviceType.LG -> default.filter { app -> repo.state.value.connectedDevice?.lgApps?.any { it.name == app.name } == true }
+            DeviceType.LG -> repo.state.value.connectedDevice?.lgApps     //default.filter { app -> repo.state.value.connectedDevice?.lgApps?.any { it.name == app.name } == true }
             DeviceType.ROKU -> repo.state.value.connectedDevice?.rokuViewModel?.channels?.value?.map {
                 val icon = repo.state.value.connectedDevice?.rokuViewModel?.getIconURL(it.id) ?: ""
                 App(null, name = it.title, it.id, icon = icon)
@@ -155,8 +158,14 @@ class SmartViewModel(
                     text
                 )
 
-                DeviceType.SAMSUNG -> {}
-                DeviceType.LG -> {}
+                DeviceType.SAMSUNG -> {
+
+                }
+
+                DeviceType.LG -> {
+                    state.value.connectedDevice?.sendTextToLg(text)
+                }
+
                 null -> {}
             }
         } catch (ee: Exception) {

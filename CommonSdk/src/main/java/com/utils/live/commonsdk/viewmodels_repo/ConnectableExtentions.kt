@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.KeyEvent
 import androidx.core.content.getSystemService
 import com.connectsdk.core.AppInfo
+import com.connectsdk.core.TextInputStatusInfo
 import com.sdk.remote.androidremote.ConnectionListener
 import com.sdk.remote.androidremote.DeviceType
 import com.sdk.remote.androidremote.fire.FireTvConnection
@@ -24,6 +25,7 @@ import com.connectsdk.service.capability.Launcher.AppLaunchListener
 import com.connectsdk.service.capability.MediaControl
 import com.connectsdk.service.capability.PlaylistControl
 import com.connectsdk.service.capability.PowerControl
+import com.connectsdk.service.capability.TextInputControl
 import com.connectsdk.service.capability.VolumeControl
 import com.connectsdk.service.capability.listeners.ResponseListener
 import com.connectsdk.service.command.ServiceCommandError
@@ -38,6 +40,7 @@ import com.sdk.remote.androidremote.samsung.SamsungTVWebSocket
 import com.sdk.remote.androidremote.samsung.getCommand
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 
 
 fun ConnectableDevice.setPinCode(string: String) {
@@ -96,12 +99,15 @@ suspend fun ConnectableDevice.connect(context: Context, listener: ConnectionList
 
                                 override fun onSuccess(apps: MutableList<AppInfo>?) {
                                     lgApps = apps?.map {
-                                        App(0, it.name, it.id)
+
+                                        Log.i(TAG, "onSuccess: ${it.rawData}")
+                                        App(null, it.name, it.id)
+
                                     }
                                 }
                             })
 
-                            lgApps = device?.getLgApps()
+                            //  lgApps = device?.lgApps
 
                         }
 
@@ -176,16 +182,6 @@ inline fun <reified T : CapabilityMethods> ConnectableDevice.useCapability(
 
 // Updated lgButtonPress function
 fun ConnectableDevice.lgButtonPress(key: Int) {
-    val buttonCallback1 = object : ResponseListener<Any> {
-        override fun onError(error: ServiceCommandError?) {
-            Log.e("TVConnection", "Button press error: ${error?.message ?: "Unknown error"}")
-        }
-
-        override fun onSuccess(response: Any?) {
-            Log.i("TVConnection", "Button press success")
-        }
-    }
-
 
     val buttonCallback = object : ResponseListener<Any> {
         override fun onError(error: ServiceCommandError?) {
@@ -261,7 +257,14 @@ fun ConnectableDevice.sendCommand(key: Int) {
     when (type) {
         DeviceType.FIRE -> fireTvConnection?.fireCommand(key.getFireKey())
         DeviceType.SAMSUNG -> samsungTVWebSocket?.sendCommand(key.getCommand())
-        DeviceType.LG -> lgButtonPress(key)
+        DeviceType.LG -> {
+
+            if (key == KeyEvent.KEYCODE_DEL)
+                sendTextToLg(null)
+            else
+                lgButtonPress(key)
+        }
+
         DeviceType.ANDROID -> androidPairingManager?.remote?.sendKey(key)
         DeviceType.ROKU -> rokuViewModel?.keyPress(key)
         DeviceType.HISENSE -> {
@@ -271,6 +274,33 @@ fun ConnectableDevice.sendCommand(key: Int) {
                 hisenseTvConnection?.sendKeyCode(key.toVidaaKeyCode())
         }
     }
+}
+
+var isSubScribe = false
+
+fun ConnectableDevice.sendTextToLg(text: String?) {
+    Log.i(TAG, "onSendText: $text")
+
+
+    val capibility =
+        getCapability(TextInputControl::class.java)
+
+    capibility?.subscribeTextInputStatus(object :
+        TextInputControl.TextInputStatusListener {
+        override fun onSuccess(`object`: TextInputStatusInfo?) {
+
+        }
+
+        override fun onError(error: ServiceCommandError?) {
+            Log.i(TAG, "onError: ${error?.message}")
+        }
+    })
+
+    if (text == null)
+        capibility?.sendDelete()
+    else
+        capibility?.sendText(text)
+
 }
 
 
@@ -311,7 +341,6 @@ fun RokuViewModel.getIconURL(channelId: String): String {
 
     return url
 }
-
 
 
 fun Context.vibrate() {
