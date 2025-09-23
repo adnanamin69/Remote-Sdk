@@ -232,11 +232,28 @@ fun Int.getCommand(): String {
 @Keep
 fun String.samsungId(): String {
     return when (this.lowercase()) {
-        "youtube" -> "111299001912"
+        "espn" -> "3201708014618"
+        "hulu" -> "3201601007625"
+        "max" -> "3202301029760"
         "netflix" -> "3201907018807"
-        "spotify" -> "3201606009684"
+        "paramount+" -> "3201710014981"
+        "pluto tv" -> "3201808016802"
         "prime video" -> "3201910019365"
+        "spotify" -> "3201606009684"
+        "youtube" -> "111299001912"
+
+        // New Apps
+        "youtube tv" -> "3201901017640"
+        "youtube music" -> "3201901017641"
+        "youtube kids" -> "3201901017642"
+        "disney+" -> "3201901017643"
+        "tubi" -> "3201901017644"
+        "peacock" -> "3201901017645"
+        "google play movies & tv" -> "3201901017646"
+        "hbo max" -> "3201901017647"
+        "haystack news" -> "3201901017648"
+
         else -> "0"
     }
-
 }
+
