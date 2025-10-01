@@ -21,6 +21,7 @@
 package com.connectsdk.discovery.provider;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.amazon.whisperplay.fling.media.controller.DiscoveryController;
 import com.amazon.whisperplay.fling.media.controller.RemoteMediaPlayer;
@@ -87,14 +88,23 @@ public class FireTVDiscoveryProvider implements DiscoveryProvider {
     @Override
     public void stop() {
         if (isRunning) {
-            discoveryController.stop();
+            if (discoveryController != null) {
+                try {
+                    discoveryController.stop();
+                } catch (Exception e) {
+                    // Catch Whisperplay's internal NPE and log it
+                    Log.w("FireTVDiscoveryProvider", "Error stopping discoveryController", e);
+                }
+            }
             isRunning = false;
         }
+
         for (ServiceDescription serviceDescription : foundServices.values()) {
             notifyListenersThatServiceLost(serviceDescription);
         }
         foundServices.clear();
     }
+
 
     /**
      * Safely restart discovery
