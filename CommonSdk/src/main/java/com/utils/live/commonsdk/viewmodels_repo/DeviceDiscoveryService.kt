@@ -166,14 +166,7 @@ class DeviceDiscoveryService(
     // DiscoveryManagerListener implementations
     override fun onDeviceAdded(manager: DiscoveryManager?, device: ConnectableDevice?) {
         Log.i(TAG, "Device added: ${device?.friendlyName} (${device?.ipAddress})")
-        manager?.compatibleDevices?.values?.distinctBy { it.ipAddress }?.map {
-            it.type =
-                if (it.manufacture?.contains("Amazon", true) == true)
-                    DeviceType.FIRE
-                else DeviceType.LG
-
-            it
-        }?.let { list ->
+        manager?.compatibleDevices?.values?.distinctBy { it.ipAddress }?.let { list ->
             Log.i(TAG, "Total devices discovered: ${list.size}")
             repository.setTvs(list)
         }

@@ -29,7 +29,11 @@ class SmartRepository(val preferencesHelper: PreferencesHelper) {
     }
 
     fun setTvs(tvs: List<ConnectableDevice>) {
-        _state.update { it.copy(tvs = tvs) }
+        _state.update {
+            it.copy(tvs = tvs.filter {
+                it.manufacture?.contains("Amazon", true) == true
+            })
+        }
     }
 
 
