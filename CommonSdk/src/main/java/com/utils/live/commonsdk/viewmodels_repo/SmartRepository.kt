@@ -3,6 +3,7 @@ package com.utils.live.commonsdk.viewmodels_repo
 import androidx.annotation.Keep
 import com.connectsdk.device.ConnectableDevice
 import com.sdk.remote.androidremote.DeviceType
+import com.sdk.remote.androidremote.isValidIP
 import com.sdk.remote.androidremote.models.App
 import com.utils.live.commonsdk.models.SavedDevice
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,15 +30,14 @@ class SmartRepository(val preferencesHelper: PreferencesHelper) {
     }
 
     fun setTvs(tvs: List<ConnectableDevice>) {
-        _state.update { it.copy(tvs = tvs) }
+        _state.update { it.copy(tvs = tvs.filter { it.ipAddress.isValidIP() }) }
 
 
-
-     /*   _state.update {
-            it.copy(tvs = tvs.filter {
-                it.manufacture?.contains("Amazon", true) == true
-            })
-        }*/
+        /*   _state.update {
+               it.copy(tvs = tvs.filter {
+                   it.manufacture?.contains("Amazon", true) == true
+               })
+           }*/
     }
 
 
