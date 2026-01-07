@@ -33,6 +33,7 @@ import com.connectsdk.service.FireTVService;
 import com.connectsdk.service.command.ServiceCommandError;
 import com.connectsdk.service.config.ServiceDescription;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -132,6 +133,8 @@ public class FireTVDiscoveryProvider implements DiscoveryProvider {
         foundServices.clear();
         stop();
     }
+
+
 
     @Override
     public void addListener(DiscoveryProviderListener listener) {

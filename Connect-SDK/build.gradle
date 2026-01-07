@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 
 android {
 
-    compileSdk 34
+    compileSdk 36
     namespace = "com.connectsdk"
     packagingOptions {
         resources {
@@ -38,6 +38,9 @@ android {
             minifyEnabled false
             consumerProguardFiles("consumer-rules.pro")
         }
+    }
+    buildFeatures {
+        buildConfig true
     }
 }
 

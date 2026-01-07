@@ -390,9 +390,6 @@ fun RemoteControlScreen(
                     installedApps?.forEach {
 
 
-
-
-
                         Button(
                             onClick = {
                                 smartViewModel.onAppPress(it)
