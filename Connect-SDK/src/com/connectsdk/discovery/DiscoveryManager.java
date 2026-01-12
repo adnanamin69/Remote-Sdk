@@ -246,46 +246,73 @@ public class DiscoveryManager implements ConnectableDeviceListener, DiscoveryPro
 
             @Override
             public void onReceive(Context context, Intent intent) {
-                String action = intent.getAction();
+                try {
+                    String action = intent.getAction();
 
-                if (action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
-                    NetworkInfo networkInfo = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+                    if (action != null && action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
+                        NetworkInfo networkInfo = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
 
-                    switch (networkInfo.getState()) {
-                        case CONNECTED:
-                            if (mSearching) {
-                                for (DiscoveryProvider provider : discoveryProviders) {
-                                    provider.restart();
+                        if (networkInfo == null) {
+                            Log.w(Util.T, "Network state change broadcast received but NetworkInfo is null");
+                            return;
+                        }
+
+                        switch (networkInfo.getState()) {
+                            case CONNECTED:
+                                if (mSearching) {
+                                    for (DiscoveryProvider provider : discoveryProviders) {
+                                        try {
+                                            provider.restart();
+                                        } catch (Exception e) {
+                                            Log.w(Util.T, "Error restarting discovery provider", e);
+                                        }
+                                    }
                                 }
-                            }
 
-                            break;
+                                break;
 
-                        case DISCONNECTED:
-                            Log.w(Util.T, "Network connection is disconnected");
+                            case DISCONNECTED:
+                                Log.w(Util.T, "Network connection is disconnected");
 
-                            for (DiscoveryProvider provider : discoveryProviders) {
-                                provider.reset();
-                            }
+                                for (DiscoveryProvider provider : discoveryProviders) {
+                                    try {
+                                        provider.reset();
+                                    } catch (Exception e) {
+                                        Log.w(Util.T, "Error resetting discovery provider", e);
+                                    }
+                                }
 
-                            allDevices.clear();
+                                try {
+                                    allDevices.clear();
 
-                            for (ConnectableDevice device : compatibleDevices.values()) {
-                                handleDeviceLoss(device);
-                            }
-                            compatibleDevices.clear();
+                                    for (ConnectableDevice device : compatibleDevices.values()) {
+                                        try {
+                                            handleDeviceLoss(device);
+                                        } catch (Exception e) {
+                                            Log.w(Util.T, "Error handling device loss", e);
+                                        }
+                                    }
+                                    compatibleDevices.clear();
+                                } catch (Exception e) {
+                                    Log.w(Util.T, "Error clearing devices on network disconnect", e);
+                                }
 
-                            break;
+                                break;
 
-                        case CONNECTING:
-                            break;
-                        case DISCONNECTING:
-                            break;
-                        case SUSPENDED:
-                            break;
-                        case UNKNOWN:
-                            break;
+                            case CONNECTING:
+                                break;
+                            case DISCONNECTING:
+                                break;
+                            case SUSPENDED:
+                                break;
+                            case UNKNOWN:
+                                break;
+                        }
                     }
+                } catch (Exception e) {
+                    // Catch all exceptions to prevent BroadcastReceiver from crashing
+                    // This is critical as uncaught exceptions in BroadcastReceiver cause RuntimeException
+                    Log.e(Util.T, "Error in network state change BroadcastReceiver", e);
                 }
             }
         };

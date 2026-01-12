@@ -370,6 +370,7 @@ Java_com_sdk_remote_androidremote_RemoteNDKHelper_getAllowedPackages(JNIEnv *env
             "Y29tLmtpbmcuc21hcnQudHZyZW1vdGUuc2NyZWVuLm1pcnJvci52aWV3",//king
             "Y29tLnR2LnJlbW90ZS5jb250cm9sLnR2cmVtb3RlLmFsbHR2cmVtb3RlLnVuaXZlcnNhbC5hcHAucmVtb3RldHY=",//Adnan Farhad
             "Y29tLnNtYXJ0LnR2cmVtb3RlLmNvbnRyb2w=",//New client from fire to universal
+
     };
     size_t count = sizeof(pkgs) / sizeof(pkgs[0]);
     jobjectArray array = env->NewObjectArray((jsize) count, env->FindClass("java/lang/String"),

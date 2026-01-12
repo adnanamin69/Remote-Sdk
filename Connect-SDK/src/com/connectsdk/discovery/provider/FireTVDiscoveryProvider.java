@@ -77,8 +77,18 @@ public class FireTVDiscoveryProvider implements DiscoveryProvider {
     @Override
     public void start() {
         if (!isRunning) {
-            discoveryController.start(fireTVListener);
-            isRunning = true;
+            if (discoveryController != null) {
+                try {
+                    discoveryController.start(fireTVListener);
+                    isRunning = true;
+                } catch (Exception e) {
+                    // Catch any exceptions from Whisperplay SDK and log them
+                    Log.w("FireTVDiscoveryProvider", "Error starting discoveryController", e);
+                    isRunning = false;
+                }
+            } else {
+                Log.w("FireTVDiscoveryProvider", "Cannot start: discoveryController is null");
+            }
         }
     }
 
@@ -92,8 +102,12 @@ public class FireTVDiscoveryProvider implements DiscoveryProvider {
             if (discoveryController != null) {
                 try {
                     discoveryController.stop();
+                } catch (NullPointerException e) {
+                    // Catch Whisperplay's internal NPE (WhisperplayControllerAdaptor.shutdownAdapter)
+                    // This is a known issue in the Whisperplay SDK where it tries to call stop() on null
+                    Log.w("FireTVDiscoveryProvider", "NullPointerException stopping discoveryController (Whisperplay SDK bug)", e);
                 } catch (Exception e) {
-                    // Catch Whisperplay's internal NPE and log it
+                    // Catch any other exceptions from Whisperplay SDK and log them
                     Log.w("FireTVDiscoveryProvider", "Error stopping discoveryController", e);
                 }
             }
@@ -130,8 +144,14 @@ public class FireTVDiscoveryProvider implements DiscoveryProvider {
      */
     @Override
     public void reset() {
-        foundServices.clear();
-        stop();
+        try {
+            foundServices.clear();
+            stop();
+        } catch (Exception e) {
+            // Ensure reset() never throws exceptions, even if stop() fails
+            Log.w("FireTVDiscoveryProvider", "Error in reset()", e);
+            isRunning = false;
+        }
     }
 
 
