@@ -283,6 +283,8 @@ class RemoteManager(
             sslSocket.close()
         } catch (_: IOException) {
             // Handle close error
+        } catch (e: Exception) {
+
         }
     }
 }

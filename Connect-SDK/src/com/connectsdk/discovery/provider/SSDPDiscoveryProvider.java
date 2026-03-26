@@ -114,7 +114,7 @@ public class SSDPDiscoveryProvider implements DiscoveryProvider {
     @Override
     public void start() {
         synchronized (lock) {
-            if (isRunning)
+            if (isRunning || ssdpClient == null)
                 return;
 
             isRunning = true;
@@ -222,20 +222,20 @@ public class SSDPDiscoveryProvider implements DiscoveryProvider {
             // Send 3 times, staggered by 1 second (0ms, 1000ms, 2000ms)
             for (int i = 0; i < 3; i++) {
                 final int delay = i * 1000;
-
-                rescanSendTimer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        if (!isRunning || ssdpClient == null) {
-                            return;
+                if (rescanSendTimer != null)
+                    rescanSendTimer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            if (!isRunning || ssdpClient == null) {
+                                return;
+                            }
+                            try {
+                                ssdpClient.send(message);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                         }
-                        try {
-                            ssdpClient.send(message);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }, delay);
+                    }, delay);
             }
         }
     }
