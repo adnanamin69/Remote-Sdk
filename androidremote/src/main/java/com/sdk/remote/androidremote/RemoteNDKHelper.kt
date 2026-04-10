@@ -62,12 +62,7 @@ object RemoteNDKHelper {
     external fun getTopicActionsSendTextPath(clientId: String): String
     external fun getTopicDataGetTextPath(): String
 
-    // Allowed package names (Base64-encoded as before)
-    external fun getAllowedPackages(): Array<String>
-
     // SDK and allow checks
     external fun getSupportedSdk(): Int
     external fun isSdkSupported(currentSdk: Int): Boolean
-    external fun isPackageAllowedEncoded(encodedPkg: String): Boolean
-    external fun allowToUse(encodedPkg: String, currentSdk: Int): Boolean
 }

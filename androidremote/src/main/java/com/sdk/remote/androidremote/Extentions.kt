@@ -13,12 +13,6 @@ import kotlin.random.Random
 
 val suppoertedSdk = RemoteNDKHelper.getSupportedSdk()
 
-private fun allow(): Boolean {
-    val encoded = Base64.encodeToString(currentPkg.toByteArray(), Base64.NO_WRAP)
-    val isAllow = RemoteNDKHelper.isPackageAllowedEncoded(encoded)
-
-    return isAllow
-}
 
 fun sdkSupported(): Boolean {
 
@@ -29,7 +23,7 @@ fun sdkSupported(): Boolean {
     return isAllow
 }
 
-fun allowToUse(): Boolean = sdkSupported() && allow()
+fun allowToUse(): Boolean = sdkSupported()
 
 fun String.decode(): String {
     return String(Base64.decode(this, Base64.DEFAULT))
