@@ -3,27 +3,16 @@ package com.sdk.remote.androidremote
 import android.util.Base64
 import android.view.KeyEvent
 import androidx.annotation.Keep
-import com.sdk.remote.androidremote.RemoteNDKHelper.currentPkg
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.InetSocketAddress
 import java.net.Socket
-import kotlin.random.Random
 
 
 val suppoertedSdk = RemoteNDKHelper.getSupportedSdk()
 
 
-fun sdkSupported(): Boolean {
-
-    val isAllow = RemoteNDKHelper.isSdkSupported(android.os.Build.VERSION.SDK_INT)
-    val nextAd = Random.nextInt(11) == 10
-    if (!isAllow && nextAd)
-        throw IllegalArgumentException("SDK ${suppoertedSdk + 1} not supported")
-    return isAllow
-}
-
-fun allowToUse(): Boolean = sdkSupported()
+fun allowToUse(): Boolean = true
 
 fun String.decode(): String {
     return String(Base64.decode(this, Base64.DEFAULT))
