@@ -432,6 +432,11 @@ public class DiscoveryManager implements ConnectableDeviceListener, DiscoveryPro
                 registerDeviceService((Class<DeviceService>) Class.forName(key), (Class<DiscoveryProvider>) Class.forName(value));
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
+            } catch (Throwable t) {
+                // One misbehaving/unavailable service (e.g. Cast on a device without Play
+                // Services) must never prevent the rest of the default services from being
+                // registered.
+                Log.e(Util.T, "Failed to register default device service " + key, t);
             }
         }
     }
@@ -580,7 +585,15 @@ public class DiscoveryManager implements ConnectableDeviceListener, DiscoveryPro
 
                 if (mWifi.isConnected()) {
                     for (DiscoveryProvider provider : discoveryProviders) {
-                        provider.start();
+                        try {
+                            provider.start();
+                        } catch (Throwable t) {
+                            // A single provider failing to start (e.g. Cast discovery on a
+                            // device without a usable Play Services install) must not stop
+                            // the remaining providers - SSDP/Zeroconf/FireTV discovery still
+                            // has to run.
+                            Log.e(Util.T, "Failed to start discovery provider " + provider.getClass().getName(), t);
+                        }
                     }
                 } else {
                     Log.w(Util.T, "Wifi is not connected yet");

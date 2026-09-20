@@ -11,6 +11,7 @@ import android.util.Log
 import com.connectsdk.device.ConnectableDevice
 import com.connectsdk.discovery.DiscoveryManager
 import com.connectsdk.discovery.DiscoveryManagerListener
+import com.connectsdk.service.CastService
 import com.connectsdk.service.command.ServiceCommandError
 import com.sdk.remote.androidremote.DeviceType
 import kotlinx.coroutines.CoroutineScope
@@ -166,29 +167,43 @@ class DeviceDiscoveryService(
     // DiscoveryManagerListener implementations
     override fun onDeviceAdded(manager: DiscoveryManager?, device: ConnectableDevice?) {
         Log.i(TAG, "Device added: ${device?.friendlyName} (${device?.ipAddress})")
-        manager?.compatibleDevices?.values?.distinctBy { it.ipAddress }?.let { list ->
-            Log.i(TAG, "Total devices discovered: ${list.size}")
-            repository.setTvs(list)
-        }
+        publishDiscoveredDevices(manager)
     }
 
     override fun onDeviceUpdated(manager: DiscoveryManager?, device: ConnectableDevice?) {
         Log.i(TAG, "Device updated: ${device?.friendlyName} (${device?.ipAddress})")
-        manager?.compatibleDevices?.values?.distinctBy { it.ipAddress }?.let { list ->
-            Log.i(TAG, "Total devices discovered: ${list.size}")
-            repository.setTvs(list)
-        }
+        publishDiscoveredDevices(manager)
     }
 
     override fun onDeviceRemoved(manager: DiscoveryManager?, device: ConnectableDevice?) {
         Log.i(TAG, "Device removed: ${device?.friendlyName} (${device?.ipAddress})")
-        manager?.compatibleDevices?.values?.distinctBy { it.ipAddress }?.let { list ->
-            Log.i(TAG, "Total devices discovered: ${list.size}")
-            repository.setTvs(list)
-        }
+        publishDiscoveredDevices(manager)
     }
 
     override fun onDiscoveryFailed(manager: DiscoveryManager?, error: ServiceCommandError?) {
         Log.e(TAG, "Discovery failed: ${error?.message}")
+    }
+
+    /**
+     * Connect SDK represents each protocol a TV answers to as its own ConnectableDevice
+     * unless service integration is turned on, so a TV that answers both its native
+     * protocol (Roku/FireTV/webOS/DIAL/etc) *and* Google Cast shows up twice at the same
+     * IP - which is now common since most smart TVs and streaming boxes bundle Cast
+     * support alongside their native one. Collapsing purely by IP address picked whichever
+     * of the two ConcurrentHashMap happened to iterate first, which could silently hide the
+     * properly-typed entry behind a same-IP Chromecast-only echo. Group by IP instead and,
+     * within each group, prefer an entry that has a real (non-Chromecast-only) service.
+     */
+    private fun publishDiscoveredDevices(manager: DiscoveryManager?) {
+        val list = manager?.compatibleDevices?.values
+            ?.groupBy { it.ipAddress }
+            ?.map { (_, devices) ->
+                devices.firstOrNull { device ->
+                    device.services.any { it.serviceName != CastService.ID }
+                } ?: devices.first()
+            } ?: return
+
+        Log.i(TAG, "Total devices discovered: ${list.size}")
+        repository.setTvs(list)
     }
 }
