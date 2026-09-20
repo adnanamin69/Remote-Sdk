@@ -1,32 +1,43 @@
 package com.sdk.remote.androidremote.android
 
 import android.content.Context
+import android.os.Build
 import android.util.Base64
 import android.util.Log
 import androidx.annotation.Keep
 import androidx.core.content.edit
+import com.google.protobuf.ByteString
 import com.sdk.remote.androidremote.ATVSSLContext
 import com.sdk.remote.androidremote.ConnectionListener
 import com.sdk.remote.androidremote.android.remote.RemoteManager
 import kotlinx.coroutines.CoroutineScope
-
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
+import pairing.Pairingmessage
 import java.io.IOException
 import java.io.OutputStream
-import java.math.BigInteger
 import java.security.MessageDigest
-import java.security.NoSuchAlgorithmException
+import java.security.MessageDigest.getInstance
 import java.security.PublicKey
 import java.security.cert.Certificate
-import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
 import java.security.interfaces.RSAPublicKey
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocket
 
+/**
+ * Implements the Android TV Remote "pairing" handshake (the Polo protocol Google uses for
+ * both Android TV and Google TV remote-control pairing) over the real generated protobuf
+ * messages from pairingmessage.proto, instead of hand-built byte arrays. Every step's
+ * acknowledgement is read back and validated, and the PIN math uses a plain hex decode
+ * (not BigInteger, which silently drops/adds bytes around leading zero nibbles).
+ */
 @Keep
 class PairingManager(
     private val context: Context,
@@ -37,82 +48,31 @@ class PairingManager(
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val sslContext: SSLContext? = ATVSSLContext.getInstance(context)
 
-
-    private val PAIRING_MSG_HEADER =
-        byteArrayOf(42, 8, 2, 16, 200.toByte(), 1, 194.toByte(), 2, 34, 10, 32)
-    private val PAIRING_MSG = byteArrayOf(
-        8,
-        2,
-        16,
-        200.toByte(),
-        1,
-        82,
-        43,
-        10,
-        21,
-        105,
-        110,
-        102,
-        111,
-        46,
-        107,
-        111,
-        100,
-        111,
-        110,
-        111,
-        46,
-        97,
-        115,
-        115,
-        105,
-        115,
-        116,
-        97,
-        110,
-        116,
-        18,
-        13,
-        105,
-        110,
-        116,
-        101,
-        114,
-        102,
-        97,
-        99,
-        101,
-        32,
-        119,
-        101,
-        98
-    )
     private val PAIRING_PORT = 6467
-    private val OPTION_MSG =
-        byteArrayOf(8, 2, 16, 200.toByte(), 1, 162.toByte(), 1, 8, 10, 4, 8, 3, 16, 6, 24, 1)
-    private val CONFIGURATION_MSG =
-        byteArrayOf(8, 2, 16, 200.toByte(), 1, 242.toByte(), 1, 8, 10, 4, 8, 3, 16, 6, 16, 1)
+
+    // Purely cosmetic: shown to the user on the TV's pairing confirmation screen.
+    private val CLIENT_NAME = Build.MODEL ?: "Android"
+    private val SERVICE_NAME = "com.sdk.remote.androidremote/AndroidTvRemote"
 
     private var certificate: Certificate? = null
     private var serverPublicKey: PublicKey? = null
-    private var socket: OutputStream? = null
+    private var sslSocket: SSLSocket? = null
+    private var outputStream: OutputStream? = null
+    private var readerJob: Job? = null
+    private val responseChannel = Channel<Pairingmessage.PairingMessage>(Channel.UNLIMITED)
 
     var remote: RemoteManager? = null
-
-
-//    var remote: ATVRemote1? = null
-
 
     val prefs = context.getSharedPreferences("tvHashnew", Context.MODE_PRIVATE)
     val tvHash = calculateImageHash(ip)
 
     init {
-
         Log.i("ATVRemote", ": ${prefs.contains(tvHash)}")
         if (!prefs.contains(tvHash)) {
             scope.launch {
-                start()
-                connectionListener.onPinRequired(6)
+                if (start()) {
+                    connectionListener.onPinRequired(6)
+                }
             }
         } else {
             setRemote()
@@ -122,10 +82,7 @@ class PairingManager(
     var isConnected = false
 
     fun setRemote() {
-        // remote = ATVRemote1(sslContext, ip)
-        //  remote?.execute(r = callBack, notConnected = notConnected)
         remote = RemoteManager(ip, 6466, sslContext!!)
-        //remote?.start()
 
         remote?.setEventListener(object : RemoteManager.RemoteEventListener {
             override fun onReady() {
@@ -139,17 +96,11 @@ class PairingManager(
                 }
             }
 
-            override fun onCurrentApp(packageName: String) {
+            override fun onCurrentApp(packageName: String) {}
 
-            }
+            override fun onVolumeChanged(volume: RemoteManager.VolumeInfo) {}
 
-            override fun onVolumeChanged(volume: RemoteManager.VolumeInfo) {
-
-            }
-
-            override fun onPowered(powered: Boolean) {
-
-            }
+            override fun onPowered(powered: Boolean) {}
 
             override fun onError(error: Throwable) {
                 if (!isConnected) {
@@ -159,7 +110,6 @@ class PairingManager(
             }
 
             override fun onUnpaired() {
-
                 connectionListener.onDisconnect()
                 isConnected = false
             }
@@ -167,140 +117,232 @@ class PairingManager(
         remote?.start()
     }
 
-    suspend fun start() {
-        Log.i("ATVRemote", "start: ")
-
-        certificate = ATVSSLContext.getCertificate()
+    /**
+     * Opens the pairing socket and runs the request/option/configuration steps of the
+     * handshake, validating the TV's acknowledgement after each one. Returns true once the
+     * TV is ready for the user's PIN, false (with [ConnectionListener.onFailedToConnect]
+     * already reported) if anything failed before that point.
+     */
+    suspend fun start(): Boolean = withContext(Dispatchers.IO) {
         try {
             Log.i("ATVRemote", "start: ")
-            withContext(Dispatchers.IO) {
-                val s = sslContext?.socketFactory?.createSocket(ip, PAIRING_PORT) as SSLSocket
-                s.startHandshake()
-                serverPublicKey = s.session.peerCertificates[0].publicKey
-                socket = s.outputStream
+            certificate = ATVSSLContext.getCertificate()
 
-                socket?.write(byteArrayOf(PAIRING_MSG.size.toByte()))
-                socket?.write(PAIRING_MSG)
+            val socket = sslContext?.socketFactory?.createSocket(ip, PAIRING_PORT) as SSLSocket
+            socket.startHandshake()
+            serverPublicKey = socket.session.peerCertificates[0].publicKey
+            sslSocket = socket
+            outputStream = socket.outputStream
+            startReadingResponses(socket)
 
-                socket?.write(byteArrayOf(OPTION_MSG.size.toByte()))
-                socket?.write(OPTION_MSG)
+            sendMessage(createPairingRequestMessage())
+            waitForMessage()
 
-                socket?.write(byteArrayOf(CONFIGURATION_MSG.size.toByte()))
-                socket?.write(CONFIGURATION_MSG)
-            }
-        } catch (e: IOException) {
+            sendMessage(createPairingOptionMessage())
+            waitForMessage()
+
+            sendMessage(createConfigMessage())
+            waitForMessage()
+
+            true
+        } catch (e: Exception) {
             Log.i("ATVRemote", "start: ${e.message}")
-            e.printStackTrace()
+            connectionListener.onFailedToConnect(e.message ?: "Failed to connect")
+            closeSocket()
+            false
         }
-
-        //   presenter.pairingManagerSetupFinished()
     }
 
     fun finishPairing(code: String) {
-
-
         scope.launch {
-
-            // check if all characters in code are the same
-            if (code.isNotEmpty() && code.all { it == code[0] }) {
-                connectionListener.pinError("Invalid Pin Code")
-                socket?.flush()
-                socket?.close()
-                return@launch
-            }
-
-            val one = PAIRING_MSG_HEADER
-            val two: ByteArray?
             try {
-                two = computeAlphaValue(code)
-            } catch (e: CertificateException) {
-                Log.i("ATVRemote", "finishPairing: cer eror ${e.message}")
-                e.printStackTrace()
-                return@launch
-            }
-
-            try {
-                val combined = ByteArray(one.size + (two?.size ?: 0))
-
-                for (i in combined.indices) {
-                    combined[i] =
-                        ((if (i < one.size) one[i] else two?.get(i - one.size)) ?: 0)
+                // The 6-hex-character code shown on the TV is [1 checksum byte][2 nonce
+                // bytes]. The secret sent back is the full SHA-256 over
+                // client-mod|client-exp|server-mod|server-exp|nonce, and the checksum byte
+                // must equal that hash's first byte - this is Android TV Remote v2's actual
+                // "Polo" challenge-response, matching Google's own reference implementation.
+                if (code.length != 6) {
+                    connectionListener.pinError("Invalid Pin Code")
+                    closeSocket()
+                    return@launch
                 }
-                socket?.write(combined)
-                socket?.flush()
-                socket?.close()
 
-                // remote = ATVRemote1(sslContext, ip)
-                //  remote?.execute(r = onConnected)
+                val checksum = code.substring(0, 2).toInt(16)
+                val nonce = hexStringToBytes(code.substring(2))
+                val hash = computeAlpha(nonce)
+
+                if (hash == null || (hash[0].toInt() and 0xFF) != checksum) {
+                    connectionListener.pinError("Invalid Pin Code")
+                    closeSocket()
+                    return@launch
+                }
+
+                sendMessage(createSecretMessage(hash))
+                waitForMessage()
+
+                closeSocket()
                 setRemote()
-                Log.i("ATVRemote", "finishPairing: set")
-
-            } catch (e: IOException) {
+                Log.i("ATVRemote", "finishPairing: paired")
+            } catch (e: Exception) {
                 Log.i("ATVRemote", "finishPairing: ${e.message}")
-                e.printStackTrace()
+                connectionListener.pinError("Invalid Pin Code")
+                closeSocket()
             }
         }
     }
 
-    private fun computeAlphaValue(text: String): ByteArray? {
-        val certificate = certificate as? X509Certificate ?: return null
+    // --- Protobuf message construction -------------------------------------------------
 
-        Log.i("certificate", "computeAlphaValue: " + (true))
-        val publicKey = certificate.publicKey
-        val publicKey2 = serverPublicKey
-        if (publicKey !is RSAPublicKey || publicKey2 !is RSAPublicKey) {
-            Log.e("error", "Expecting RSA public key")
-            return null
+    private fun createPairingRequestMessage(): Pairingmessage.PairingMessage =
+        Pairingmessage.PairingMessage.newBuilder()
+            .setPairingRequest(
+                Pairingmessage.PairingRequest.newBuilder()
+                    .setClientName(CLIENT_NAME)
+                    .setServiceName(SERVICE_NAME)
+                    .build()
+            )
+            .setStatus(Pairingmessage.PairingMessage.Status.STATUS_OK)
+            .setProtocolVersion(2)
+            .build()
+
+    private fun createPairingOptionMessage(): Pairingmessage.PairingMessage {
+        val encoding = Pairingmessage.PairingEncoding.newBuilder()
+            .setType(Pairingmessage.PairingEncoding.EncodingType.ENCODING_TYPE_HEXADECIMAL)
+            .setSymbolLength(6)
+            .build()
+
+        return Pairingmessage.PairingMessage.newBuilder()
+            .setPairingOption(
+                Pairingmessage.PairingOption.newBuilder()
+                    .setPreferredRole(Pairingmessage.RoleType.ROLE_TYPE_INPUT)
+                    .addInputEncodings(encoding)
+                    .build()
+            )
+            .setStatus(Pairingmessage.PairingMessage.Status.STATUS_OK)
+            .setProtocolVersion(2)
+            .build()
+    }
+
+    private fun createConfigMessage(): Pairingmessage.PairingMessage {
+        val encoding = Pairingmessage.PairingEncoding.newBuilder()
+            .setType(Pairingmessage.PairingEncoding.EncodingType.ENCODING_TYPE_HEXADECIMAL)
+            .setSymbolLength(6)
+            .build()
+
+        return Pairingmessage.PairingMessage.newBuilder()
+            .setPairingConfiguration(
+                Pairingmessage.PairingConfiguration.newBuilder()
+                    .setClientRole(Pairingmessage.RoleType.ROLE_TYPE_INPUT)
+                    .setEncoding(encoding)
+                    .build()
+            )
+            .setStatus(Pairingmessage.PairingMessage.Status.STATUS_OK)
+            .setProtocolVersion(2)
+            .build()
+    }
+
+    private fun createSecretMessage(secret: ByteArray): Pairingmessage.PairingMessage =
+        Pairingmessage.PairingMessage.newBuilder()
+            .setPairingSecret(
+                Pairingmessage.PairingSecret.newBuilder()
+                    .setSecret(ByteString.copyFrom(secret))
+                    .build()
+            )
+            .setStatus(Pairingmessage.PairingMessage.Status.STATUS_OK)
+            .setProtocolVersion(2)
+            .build()
+
+    // --- Wire I/O ------------------------------------------------------------------------
+
+    private fun sendMessage(message: Pairingmessage.PairingMessage) {
+        val stream = outputStream ?: throw IOException("Pairing socket is not open")
+        message.writeDelimitedTo(stream)
+        stream.flush()
+    }
+
+    private fun startReadingResponses(socket: SSLSocket) {
+        readerJob = scope.launch {
+            val input = socket.inputStream
+            try {
+                while (isActive) {
+                    val message = Pairingmessage.PairingMessage.parseDelimitedFrom(input) ?: break
+                    responseChannel.trySend(message)
+                }
+            } catch (e: IOException) {
+                Log.i("ATVRemote", "pairing read loop ended: ${e.message}")
+            }
+        }
+    }
+
+    private suspend fun waitForMessage(): Pairingmessage.PairingMessage {
+        val message = withTimeout(15_000) { responseChannel.receive() }
+        if (message.status != Pairingmessage.PairingMessage.Status.STATUS_OK) {
+            throw IOException("TV rejected pairing step with status ${message.status}")
+        }
+        return message
+    }
+
+    private fun closeSocket() {
+        readerJob?.cancel()
+        readerJob = null
+        try {
+            outputStream?.flush()
+        } catch (_: IOException) {
         }
         try {
+            sslSocket?.close()
+        } catch (_: IOException) {
+        }
+        sslSocket = null
+        outputStream = null
+    }
 
-            val instance = MessageDigest.getInstance("SHA-256")
-            var bArr = BigInteger(text.substring(2), 16).toByteArray()
-            bArr = removeLeadingNullBytes(bArr)
-            val byteArray = publicKey.modulus.abs().toByteArray()
-            val byteArray2 = publicKey.publicExponent.abs().toByteArray()
-            val byteArray3 = publicKey2.modulus.abs().toByteArray()
-            val byteArray4 = publicKey2.publicExponent.abs().toByteArray()
-            val removeLeadingNullBytes = removeLeadingNullBytes(byteArray)
-            val removeLeadingNullBytes2 = removeLeadingNullBytes(byteArray2)
-            val removeLeadingNullBytes3 = removeLeadingNullBytes(byteArray3)
-            val removeLeadingNullBytes4 = removeLeadingNullBytes(byteArray4)
-            instance.update(removeLeadingNullBytes)
-            instance.update(removeLeadingNullBytes2)
-            instance.update(removeLeadingNullBytes3)
-            instance.update(removeLeadingNullBytes4)
-            instance.update(bArr)
-            val a = instance.digest()
-            instance.update(
-                byteArrayOf(
-                    1,
-                    2,
-                    3
-                )
-            ) // this has no meaning android studio is weird and forced me into this solution
-            return a
-        } catch (unused: NoSuchAlgorithmException) {
-            Log.e("error", "no sha-256 implementation")
+    // --- PIN / challenge-response math ----------------------------------------------------
+    // secret = SHA-256(client_modulus | client_exponent | server_modulus | server_exponent |
+    // nonce), where "client" is our own cert (presented on the pairing TLS handshake) and
+    // "server" is the TV's cert. The TV computes the same hash and only accepts pairing if
+    // it matches.
+
+    private fun computeAlpha(nonce: ByteArray): ByteArray? {
+        val clientCert = certificate as? X509Certificate ?: return null
+        val clientPublicKey = clientCert.publicKey
+        val serverPub = serverPublicKey
+
+        if (clientPublicKey !is RSAPublicKey || serverPub !is RSAPublicKey) {
+            Log.e("ATVRemote", "computeAlpha: expecting RSA public keys")
             return null
+        }
+
+        return try {
+            val digest: MessageDigest = getInstance("SHA-256")
+            digest.update(removeLeadingNullBytes(clientPublicKey.modulus.abs().toByteArray()))
+            digest.update(removeLeadingNullBytes(clientPublicKey.publicExponent.abs().toByteArray()))
+            digest.update(removeLeadingNullBytes(serverPub.modulus.abs().toByteArray()))
+            digest.update(removeLeadingNullBytes(serverPub.publicExponent.abs().toByteArray()))
+            digest.update(nonce)
+            digest.digest()
+        } catch (e: Exception) {
+            Log.e("ATVRemote", "computeAlpha: ${e.message}")
+            null
         }
     }
 
     private fun removeLeadingNullBytes(byteArray: ByteArray): ByteArray {
-        var i = 0
-        while (byteArray[i] == 0.toByte()) {
-            i++
+        var offset = 0
+        while (offset < byteArray.size && byteArray[offset] == 0.toByte()) {
+            offset++
         }
-        val arr = ByteArray(byteArray.size - i)
-        var x = i
-        var y = 0
-        while (x < byteArray.size) {
-            arr[y] = byteArray[x]
-            x++
-            y++
-        }
-        return arr
+        return byteArray.copyOfRange(offset, byteArray.size)
     }
 
+    /** Plain, fixed-width hex decode - unlike BigInteger(hex,16).toByteArray(), this never
+     *  drops or adds a byte around a leading zero nibble or a set high bit. */
+    private fun hexStringToBytes(hex: String): ByteArray {
+        require(hex.isNotEmpty() && hex.length % 2 == 0) { "Bad pin string." }
+        return ByteArray(hex.length / 2) { i ->
+            hex.substring(2 * i, 2 * i + 2).toInt(16).toByte()
+        }
+    }
 
     // Function to calculate the MD5 hash of the image file
     private fun calculateImageHash(file: String): String {
@@ -308,5 +350,4 @@ class PairingManager(
         val hashBytes = digest.digest(file.toByteArray())
         return Base64.encodeToString(hashBytes, Base64.DEFAULT)
     }
-
 }

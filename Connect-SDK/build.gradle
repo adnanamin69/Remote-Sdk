@@ -71,6 +71,8 @@ dependencies {
     implementation 'org.java-websocket:Java-WebSocket:1.5.3'
     // implementation 'javax.jmdns:jmdns:3.4.1'
     implementation 'androidx.preference:preference:1.1.1'
+    implementation 'androidx.mediarouter:mediarouter:1.7.0'
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
     implementation 'com.google.android.gms:play-services-cast:19.0.0'
     implementation 'com.googlecode.plist:dd-plist:1.23'
     implementation 'com.nimbusds:srp6a:2.1.0'
