@@ -1,10 +1,10 @@
 /*
  * ServiceDescription
  * Connect SDK
- *
+ * 
  * Copyright (c) 2014 LG Electronics.
  * Created by Hyun Kook Khang on 19 Jan 2014
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -51,7 +51,7 @@ public class ServiceDescription implements Cloneable {
     int port;
     String applicationURL;
     String version;
-    List<Service> serviceList;
+    List<Service> serviceList; 
     String locationXML;
     String serviceURI;
     Map<String, List<String>> responseHeaders;
@@ -60,8 +60,7 @@ public class ServiceDescription implements Cloneable {
 
     long lastDetection = Long.MAX_VALUE;
 
-    public ServiceDescription() {
-    }
+    public ServiceDescription() { }
 
     public ServiceDescription(String serviceFilter, String UUID, String ipAddress) {
         this.serviceFilter = serviceFilter;
@@ -237,7 +236,6 @@ public class ServiceDescription implements Cloneable {
             jsonObj.putOpt(KEY_IP_ADDRESS, ipAddress);
             jsonObj.putOpt(KEY_UUID, UUID);
             jsonObj.putOpt(KEY_FRIENDLY, friendlyName);
-            jsonObj.putOpt("manufacture", manufacturer);
             jsonObj.putOpt(KEY_MODEL_NAME, modelName);
             jsonObj.putOpt(KEY_MODEL_NUMBER, modelNumber);
             jsonObj.putOpt(KEY_PORT, port);
@@ -255,62 +253,20 @@ public class ServiceDescription implements Cloneable {
         service.setPort(this.port);
 
         // we can ignore all these NullPointerExceptions, it's OK if those properties don't have values
-        try {
-            service.setServiceID(this.serviceID);
-        } catch (NullPointerException ex) {
-        }
-        try {
-            service.setIpAddress(this.ipAddress);
-        } catch (NullPointerException ex) {
-        }
-        try {
-            service.setUUID(this.UUID);
-        } catch (NullPointerException ex) {
-        }
-        try {
-            service.setVersion(this.version);
-        } catch (NullPointerException ex) {
-        }
-        try {
-            service.setFriendlyName(this.friendlyName);
-        } catch (NullPointerException ex) {
-        }
-        try {
-            service.setManufacturer(this.manufacturer);
-        } catch (NullPointerException ex) {
-        }
-        try {
-            service.setModelName(this.modelName);
-        } catch (NullPointerException ex) {
-        }
-        try {
-            service.setModelNumber(this.modelNumber);
-        } catch (NullPointerException ex) {
-        }
-        try {
-            service.setModelDescription(this.modelDescription);
-        } catch (NullPointerException ex) {
-        }
-        try {
-            service.setApplicationURL(this.applicationURL);
-        } catch (NullPointerException ex) {
-        }
-        try {
-            service.setLocationXML(this.locationXML);
-        } catch (NullPointerException ex) {
-        }
-        try {
-            service.setResponseHeaders(this.responseHeaders);
-        } catch (NullPointerException ex) {
-        }
-        try {
-            service.setServiceList(this.serviceList);
-        } catch (NullPointerException ex) {
-        }
-        try {
-            service.setServiceFilter(this.serviceFilter);
-        } catch (NullPointerException ex) {
-        }
+        try { service.setServiceID(this.serviceID); } catch (NullPointerException ex) { }
+        try { service.setIpAddress(this.ipAddress); } catch (NullPointerException ex) { }
+        try { service.setUUID(this.UUID); } catch (NullPointerException ex) { }
+        try { service.setVersion(this.version); } catch (NullPointerException ex) { }
+        try { service.setFriendlyName(this.friendlyName); } catch (NullPointerException ex) { }
+        try { service.setManufacturer(this.manufacturer); } catch (NullPointerException ex) { }
+        try { service.setModelName(this.modelName); } catch (NullPointerException ex) { }
+        try { service.setModelNumber(this.modelNumber); } catch (NullPointerException ex) { }
+        try { service.setModelDescription(this.modelDescription); } catch (NullPointerException ex) { }
+        try { service.setApplicationURL(this.applicationURL); } catch (NullPointerException ex) { }
+        try { service.setLocationXML(this.locationXML); } catch (NullPointerException ex) { }
+        try { service.setResponseHeaders(this.responseHeaders); } catch (NullPointerException ex) { }
+        try { service.setServiceList(this.serviceList); } catch (NullPointerException ex) { }
+        try { service.setServiceFilter(this.serviceFilter); } catch (NullPointerException ex) { }
 
         return service;
     }

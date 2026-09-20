@@ -26,6 +26,7 @@ public class MirroringServiceEvent {
     private Context mContext;
     private BroadcastReceiver mScreenOnOffReceiver;
     private ContentObserver mAccessibilitySettingObserver;
+    private boolean isScreenOnOffReceiverRegistered = false;
 
     public MirroringServiceEvent(Context context) {
         if (context == null) throw new IllegalStateException("Invalid context");
@@ -50,6 +51,7 @@ public class MirroringServiceEvent {
         intentFilter.addAction(Intent.ACTION_SCREEN_ON);
         intentFilter.addAction(Intent.ACTION_SCREEN_OFF);
         mContext.registerReceiver(mScreenOnOffReceiver, intentFilter);
+        isScreenOnOffReceiverRegistered = true;
     }
 
     public void startAccessibilitySettingObserver(AccessibilitySettingListener listener) {
@@ -66,7 +68,10 @@ public class MirroringServiceEvent {
     }
 
     public void quit() {
-        if (mScreenOnOffReceiver != null) mContext.unregisterReceiver(mScreenOnOffReceiver);
+        if (isScreenOnOffReceiverRegistered && mScreenOnOffReceiver != null) {
+            mContext.unregisterReceiver(mScreenOnOffReceiver);
+            isScreenOnOffReceiverRegistered = false;
+        }
         mScreenOnOffReceiver = null;
 
         if (mAccessibilitySettingObserver != null) mContext.getContentResolver().unregisterContentObserver(mAccessibilitySettingObserver);

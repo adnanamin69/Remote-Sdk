@@ -11,7 +11,6 @@ import android.util.Log
 import com.connectsdk.device.ConnectableDevice
 import com.connectsdk.discovery.DiscoveryManager
 import com.connectsdk.discovery.DiscoveryManagerListener
-import com.connectsdk.service.CastService
 import com.connectsdk.service.command.ServiceCommandError
 import com.sdk.remote.androidremote.DeviceType
 import kotlinx.coroutines.CoroutineScope
@@ -24,6 +23,7 @@ import kotlinx.coroutines.withContext
 import java.net.SocketException
 
 private const val TAG = "DeviceDiscoveryService"
+private const val CHROMECAST_SERVICE_ID = "Chromecast"
 
 class DeviceDiscoveryService(
     private val application: Application,
@@ -199,7 +199,7 @@ class DeviceDiscoveryService(
             ?.groupBy { it.ipAddress }
             ?.map { (_, devices) ->
                 devices.firstOrNull { device ->
-                    device.services.any { it.serviceName != CastService.ID }
+                    device.services.any { it.serviceName != CHROMECAST_SERVICE_ID }
                 } ?: devices.first()
             } ?: return
 

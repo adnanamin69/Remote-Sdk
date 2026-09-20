@@ -10,7 +10,10 @@ import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.content.res.Configuration;
 import android.media.projection.MediaProjection;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+
 import com.connectsdk.R;
 import com.connectsdk.device.ConnectableDevice;
 import com.connectsdk.discovery.DiscoveryManager;
@@ -57,7 +60,7 @@ public class MirroringService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Logger.showDebug(com.connectsdk.BuildConfig.DEBUG);
+        //Logger.showDebug(com.connectsdk.BuildConfig.DEBUG);
         mServiceHandler = new HandlerThreadEx("MirroringService Handler");
         mServiceHandler.start();
 
@@ -81,14 +84,17 @@ public class MirroringService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Logger.print("onStartCommand: " + StringUtil.toString(intent));
         String action = (intent != null) ? intent.getAction() : null;
-
+        if (intent == null || intent.getAction() == null) {
+            Logger.print("Null intent; prevent zombie restart");
+            return START_NOT_STICKY;
+        }
         mServiceHandler.post(() -> {
             if (MirroringServiceIF.ACTION_START_REQUEST.equals(action) == true) executeStart(intent);
             else if (MirroringServiceIF.ACTION_STOP_REQUEST.equals(action) == true) executeStop();
             else if (MirroringServiceIF.ACTION_STOP_BY_NOTIFICATION.equals(action) == true) executeStopByNotification();
         });
 
-        return START_STICKY;
+        return START_NOT_STICKY;
     }
 
     @Override
@@ -194,7 +200,7 @@ public class MirroringService extends Service {
 
         Logger.print("executeStart");
         start(intent, connectionListener);
-        if (com.connectsdk.BuildConfig.DEBUG == true) AppUtil.showToastLong(this, "########## DEBUG version ##########");
+        //if (com.connectsdk.BuildConfig.DEBUG == true) AppUtil.showToastLong(this, "########## DEBUG version ##########");
     }
 
     private void executeStop() {
@@ -294,6 +300,16 @@ public class MirroringService extends Service {
         try {
             mMediaProjection = MirroringServiceFunc.getMediaProjection(this, intent);
             if (mMediaProjection == null) throw new Exception("Invalid projection");
+            mMediaProjection.registerCallback(new MediaProjection.Callback() {
+                @Override
+                public void onStop() {
+                    super.onStop();
+                    Logger.print("stop");
+                    if (mServiceHandler != null) {
+                        mServiceHandler.post(() -> executeStopByNotification(), 300);
+                    }
+                }
+            }, null);
 
             mRTPStreaming = new RTPStreaming();
             mRTPStreaming.setStreamingConfig(MirroringServiceFunc.createRtpVideoConfig(mMirroringSourceCapability.videoBitrate), MirroringServiceFunc.createRtpAudioConfig(), MirroringServiceFunc.createRtpSecurityConfig(mMirroringSourceCapability.masterKeys));
@@ -326,11 +342,17 @@ public class MirroringService extends Service {
             }
 
             mAudioCapture = new AudioCaptureIF();
-            mAudioCapture.setErrorListener(this::stop);
+            mAudioCapture.setErrorListener(() -> {
+                MirroringServiceIF.respondStart(getBaseContext(), false, false);
+                stop();
+            });
             mAudioCapture.startCapture(ScreenMirroringConfig.Audio.SAMPLING_RATE, ScreenMirroringConfig.Audio.CHANNEL_COUNT, mMediaProjection, mRTPStreaming.getAudioStreamHandler());
 
             mVideoCapture = new VideoCaptureIF();
-            mVideoCapture.setErrorListener(this::stop);
+            mVideoCapture.setErrorListener(() -> {
+                MirroringServiceIF.respondStart(getBaseContext(), false, false);
+                stop();
+            });
             mVideoCapture.startCapture(mMirroringSourceCapability.videoWidth, mMirroringSourceCapability.videoHeight, mMirroringSourceCapability.videoBitrate, mMediaProjection, mRTPStreaming.getVideoStreamHandler());
             return true;
         } catch (Exception e) {

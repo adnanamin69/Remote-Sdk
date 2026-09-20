@@ -1,10 +1,10 @@
 /*
  * ConnectableDevice
  * Connect SDK
- *
+ * 
  * Copyright (c) 2014 LG Electronics.
  * Created by Hyun Kook Khang on 19 Jan 2014
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,13 +33,6 @@ import org.json.JSONObject;
 
 import android.util.Log;
 
-import com.sdk.remote.androidremote.android.PairingManager;
-import com.sdk.remote.androidremote.fire.FireTvConnection;
-import com.sdk.remote.androidremote.DeviceType;
-import com.sdk.remote.androidremote.hisense.MqttClientAnd;
-import com.sdk.remote.androidremote.models.App;
-import com.sdk.remote.androidremote.roku.RokuViewModel;
-import com.sdk.remote.androidremote.samsung.SamsungTVWebSocket;
 import com.connectsdk.core.Util;
 import com.connectsdk.discovery.DiscoveryManager;
 import com.connectsdk.service.DeviceService;
@@ -68,16 +61,14 @@ import com.connectsdk.service.config.ServiceDescription;
 /**
  * ###Overview
  * ConnectableDevice serves as a normalization layer between your app and each of the device's services. It consolidates a lot of key data about the physical device and provides access to underlying functionality.
- * <p>
+ *
  * ###In Depth
  * ConnectableDevice consolidates some key information about the physical device, including model name, friendly name, ip address, connected DeviceService names, etc. In some cases, it is not possible to accurately select which DeviceService has the best friendly name, model name, etc. In these cases, the values of these properties are dependent upon the order of DeviceService discovery.
- * <p>
+ *
  * To be informed of any ready/pairing/disconnect messages from each of the DeviceService, you must set a listener.
- * <p>
+ *
  * ConnectableDevice exposes capabilities that exist in the underlying DeviceServices such as TV Control, Media Player, Media Control, Volume Control, etc. These capabilities, when accessed through the ConnectableDevice, will be automatically chosen from the most suitable DeviceService by using that DeviceService's CapabilityPriorityLevel.
  */
-
-
 public class ConnectableDevice implements DeviceServiceListener {
     // @cond INTERNAL
     public static final String KEY_ID = "id";
@@ -93,7 +84,6 @@ public class ConnectableDevice implements DeviceServiceListener {
     private String ipAddress;
     private String friendlyName;
     private String modelName;
-    private DeviceType type;
     private String modelNumber;
 
     private String lastKnownIPAddress;
@@ -102,8 +92,6 @@ public class ConnectableDevice implements DeviceServiceListener {
     private long lastDetection;
 
     private String id;
-
-    private String manufacture;
 
     private ServiceDescription serviceDescription;
 
@@ -116,79 +104,6 @@ public class ConnectableDevice implements DeviceServiceListener {
     public boolean isConnecting = false;
 
     public boolean featuresReady = false;
-
-    private FireTvConnection fireTvConnection;
-
-    private MqttClientAnd hisenseTvConnection;
-
-    private SamsungTVWebSocket samsungTVWebSocket;
-
-
-    private RokuViewModel rokuViewModel;
-    private PairingManager androidPairingManager;
-
-    private List<App> lgApps;
-
-    public List<App> getLgApps() {
-        return lgApps;
-    }
-
-    public void setLgApps(List<App> lgApps) {
-        this.lgApps = lgApps;
-    }
-
-    public PairingManager getAndroidPairingManager() {
-        return androidPairingManager;
-
-    }
-
-    public void setAndroidPairingManager(PairingManager androidPairingManager) {
-        this.androidPairingManager = androidPairingManager;
-    }
-
-    public RokuViewModel getRokuViewModel() {
-        return rokuViewModel;
-
-    }
-
-    public void setRokuViewModel(RokuViewModel rokuViewModel) {
-        this.rokuViewModel = rokuViewModel;
-    }
-
-    public SamsungTVWebSocket getSamsungTVWebSocket() {
-        return samsungTVWebSocket;
-    }
-
-    public void setSamsungTVWebSocket(SamsungTVWebSocket samsungTVWebSocket) {
-        this.samsungTVWebSocket = samsungTVWebSocket;
-    }
-
-    public MqttClientAnd getHisenseTvConnection() {
-        return hisenseTvConnection;
-    }
-
-    public void setHisenseTvConnection(MqttClientAnd hisenseTvConnection) {
-        this.hisenseTvConnection = hisenseTvConnection;
-    }
-
-    public FireTvConnection getFireTvConnection() {
-        return fireTvConnection;
-    }
-
-    public void setFireTvConnection(FireTvConnection fireTvConnection) {
-        this.fireTvConnection = fireTvConnection;
-    }
-
-
-    public boolean isSupportVoice() {
-        return type == DeviceType.ANDROID || type == DeviceType.FIRE;
-    }
-
-
-    public boolean isSupportKeyboard() {
-        return type == DeviceType.ANDROID || type == DeviceType.FIRE || type == DeviceType.ROKU || type == DeviceType.HISENSE || type == DeviceType.LG;
-    }
-
 
     public ConnectableDevice() {
         services = new ConcurrentHashMap<String, DeviceService>();
@@ -215,10 +130,6 @@ public class ConnectableDevice implements DeviceServiceListener {
         setId(json.optString(KEY_ID, null));
         setLastKnownIPAddress(json.optString(KEY_LAST_IP, null));
         setFriendlyName(json.optString(KEY_FRIENDLY, null));
-        setManufacture(json.optString("manufacture", null));
-        Log.i("Manufacturure", "conectable: " + json.optString("manufacture", null));
-
-
         setModelName(json.optString(KEY_MODEL_NAME, null));
         setModelNumber(json.optString(KEY_MODEL_NUMBER, null));
         setLastSeenOnWifi(json.optString(KEY_LAST_SEEN, null));
@@ -248,7 +159,6 @@ public class ConnectableDevice implements DeviceServiceListener {
 
     /**
      * set desirable pairing type for all services
-     *
      * @param pairingType
      */
     public void setPairingType(PairingType pairingType) {
@@ -260,7 +170,7 @@ public class ConnectableDevice implements DeviceServiceListener {
 
     /**
      * Adds a DeviceService to the ConnectableDevice instance. Only one instance of each DeviceService type (webOS, Netcast, etc) may be attached to a single ConnectableDevice instance. If a device contains your service type already, your service will not be added.
-     *
+     * 
      * @param service DeviceService to be added
      */
     public void addService(DeviceService service) {
@@ -282,7 +192,7 @@ public class ConnectableDevice implements DeviceServiceListener {
 
     /**
      * Removes a DeviceService from the ConnectableDevice instance.
-     *
+     * 
      * @param service DeviceService to be removed
      */
     public void removeService(DeviceService service) {
@@ -291,7 +201,7 @@ public class ConnectableDevice implements DeviceServiceListener {
 
     /**
      * Removes a DeviceService from the ConnectableDevice instance.
-     *
+     * 
      * @param serviceId ID of the DeviceService to be removed (DLNA, webOS TV, etc)
      */
     public void removeServiceWithId(String serviceId) {
@@ -316,10 +226,10 @@ public class ConnectableDevice implements DeviceServiceListener {
         });
     }
 
-    private synchronized List<String> getMismatchCapabilities(List<String> capabilities, List<String> allCapabilities) {
+    private synchronized List<String> getMismatchCapabilities(List<String> capabilities, List<String> allCapabilities) { 
         List<String> list = new ArrayList<String>();
 
-        for (String cap : capabilities) {
+        for (String cap: capabilities) {
             if (!allCapabilities.contains(cap)) {
                 list.add(cap);
             }
@@ -328,9 +238,7 @@ public class ConnectableDevice implements DeviceServiceListener {
         return list;
     }
 
-    /**
-     * Array of all currently discovered DeviceServices this ConnectableDevice has associated with it.
-     */
+    /** Array of all currently discovered DeviceServices this ConnectableDevice has associated with it. */
     public Collection<DeviceService> getServices() {
         return services.values();
     }
@@ -353,7 +261,7 @@ public class ConnectableDevice implements DeviceServiceListener {
 
     /**
      * Removes a DeviceService form the ConnectableDevice instance.  serviceName is used as the identifier because only one instance of each DeviceService type may be attached to a single ConnectableDevice instance.
-     *
+     * 
      * @param serviceName Name of the DeviceService to be removed from the ConnectableDevice.
      */
     public void removeServiceByName(String serviceName) {
@@ -362,7 +270,7 @@ public class ConnectableDevice implements DeviceServiceListener {
 
     /**
      * Returns a DeviceService from the ConnectableDevice instance. serviceUUID is used as the identifier because only one instance of each DeviceService type may be attached to a single ConnectableDevice instance.
-     *
+     * 
      * @param serviceUUID UUID of the DeviceService to be returned
      */
     public DeviceService getServiceWithUUID(String serviceUUID) {
@@ -377,7 +285,7 @@ public class ConnectableDevice implements DeviceServiceListener {
 
     /**
      * Adds the ConnectableDeviceListener to the list of listeners for this ConnectableDevice to receive certain events.
-     *
+     * 
      * @param listener ConnectableDeviceListener to listen to device events (connect, disconnect, ready, etc)
      */
     public void addListener(ConnectableDeviceListener listener) {
@@ -388,10 +296,10 @@ public class ConnectableDevice implements DeviceServiceListener {
 
     /**
      * Clears the array of listeners and adds the provided `listener` to the array. If `listener` is null, the array will be empty.
-     * <p>
+     * 
      * This method is deprecated. Since version 1.2.1, use
      * `ConnectableDevice#addListener(ConnectableDeviceListener listener)` instead
-     *
+     * 
      * @param listener ConnectableDeviceListener to listen to device events (connect, disconnect, ready, etc)
      */
     @Deprecated
@@ -404,7 +312,7 @@ public class ConnectableDevice implements DeviceServiceListener {
 
     /**
      * Removes a previously added ConenctableDeviceListener from the list of listeners for this ConnectableDevice.
-     *
+     * 
      * @param listener ConnectableDeviceListener to be removed
      */
     public void removeListener(ConnectableDeviceListener listener) {
@@ -417,7 +325,7 @@ public class ConnectableDevice implements DeviceServiceListener {
 
     /**
      * Enumerates through all DeviceServices and attempts to connect to each of them. When all of a ConnectableDevice's DeviceServices are ready to receive commands, the ConnectableDevice will send a onDeviceReady message to its listener.
-     * <p>
+     *
      * It is always necessary to call connect on a ConnectableDevice, even if it contains no connectable DeviceServices.
      */
     public void connect() {
@@ -439,7 +347,7 @@ public class ConnectableDevice implements DeviceServiceListener {
      * Enumerates through all DeviceServices and attempts to disconnect from each of them.
      */
     public void disconnect() {
-        for (DeviceService service : services.values()) {
+        for (DeviceService service: services.values()) {
             service.disconnect();
         }
 
@@ -481,7 +389,7 @@ public class ConnectableDevice implements DeviceServiceListener {
      * Whether the device has any DeviceServices that require an active connection (websocket, HTTP registration, etc)
      */
     public boolean isConnectable() {
-        for (DeviceService service : services.values()) {
+        for (DeviceService service: services.values()) {
             if (service.isConnectable())
                 return true;
         }
@@ -489,34 +397,30 @@ public class ConnectableDevice implements DeviceServiceListener {
         return false;
     }
 
-    /**
+    /** 
      * Sends a pairing key to all discovered device services.
-     *
+     * 
      * @param pairingKey Pairing key to send to services.
      */
     public void sendPairingKey(String pairingKey) {
-        for (DeviceService service : services.values()) {
+        for (DeviceService service: services.values()) {
             service.sendPairingKey(pairingKey);
         }
     }
 
-    /**
-     * Explicitly cancels pairing on all services that require pairing. In some services, this will hide a prompt that is displaying on the device.
-     */
+    /** Explicitly cancels pairing on all services that require pairing. In some services, this will hide a prompt that is displaying on the device. */
     public void cancelPairing() {
-        for (DeviceService service : services.values()) {
+        for (DeviceService service: services.values()) {
             service.cancelPairing();
         }
     }
 
-    /**
-     * A combined list of all capabilities that are supported among the detected DeviceServices.
-     */
+    /** A combined list of all capabilities that are supported among the detected DeviceServices. */
     public synchronized List<String> getCapabilities() {
         List<String> caps = new ArrayList<String>();
 
-        for (DeviceService service : services.values()) {
-            for (String capability : service.getCapabilities()) {
+        for (DeviceService service: services.values()) {
+            for (String capability: service.getCapabilities()) {
                 if (!caps.contains(capability)) {
                     caps.add(capability);
                 }
@@ -528,9 +432,9 @@ public class ConnectableDevice implements DeviceServiceListener {
 
     /**
      * Test to see if the capabilities array contains a given capability. See the individual Capability classes for acceptable capability values.
-     * <p>
+     *
      * It is possible to append a wildcard search term `.Any` to the end of the search term. This method will return true for capabilities that match the term up to the wildcard.
-     * <p>
+     *
      * Example: `Launcher.App.Any`
      *
      * @param capability Capability to test against
@@ -538,7 +442,7 @@ public class ConnectableDevice implements DeviceServiceListener {
     public boolean hasCapability(String capability) {
         boolean hasCap = false;
 
-        for (DeviceService service : services.values()) {
+        for (DeviceService service: services.values()) {
             if (service.hasCapability(capability)) {
                 hasCap = true;
                 break;
@@ -550,7 +454,7 @@ public class ConnectableDevice implements DeviceServiceListener {
 
     /**
      * Test to see if the capabilities array contains at least one capability in a given set of capabilities. See the individual Capability classes for acceptable capability values.
-     * <p>
+     *
      * See hasCapability: for a description of the wildcard feature provided by this method.
      *
      * @param capabilities Array of capabilities to test against
@@ -566,7 +470,7 @@ public class ConnectableDevice implements DeviceServiceListener {
 
     /**
      * Test to see if the capabilities array contains a given set of capabilities. See the individual Capability classes for acceptable capability values.
-     * <p>
+     *
      * See hasCapability: for a description of the wildcard feature provided by this method.
      *
      * @param capabilities Array of capabilities to test against
@@ -579,7 +483,7 @@ public class ConnectableDevice implements DeviceServiceListener {
 
     /**
      * Test to see if the capabilities array contains a given set of capabilities. See the individual Capability classes for acceptable capability values.
-     * <p>
+     *
      * See hasCapability: for a description of the wildcard feature provided by this method.
      *
      * @param capabilites Array of capabilities to test against
@@ -750,14 +654,13 @@ public class ConnectableDevice implements DeviceServiceListener {
     /**
      * Get a capability with the highest priority from a device. If device doesn't have such
      * capability then returns null.
-     *
      * @param controllerClass type of capability
      * @return capability implementation
      */
     public <T extends CapabilityMethods> T getCapability(Class<T> controllerClass) {
         T foundController = null;
         CapabilityPriorityLevel foundControllerPriority = CapabilityPriorityLevel.NOT_SUPPORTED;
-        for (DeviceService service : services.values()) {
+        for (DeviceService service: services.values()) {
             if (service.getAPI(controllerClass) == null)
                 continue;
 
@@ -766,12 +669,13 @@ public class ConnectableDevice implements DeviceServiceListener {
 
             if (foundController == null) {
                 foundController = controller;
-
+ 
                 if (controllerPriority == null || controllerPriority == CapabilityPriorityLevel.NOT_SUPPORTED) {
                     Log.w(Util.T, "We found a mathcing capability class, but no priority level for the class. Please check \"getPriorityLevel()\" in your class");
                 }
                 foundControllerPriority = controllerPriority;
-            } else if (controllerPriority != null && foundControllerPriority != null) {
+            }
+            else if (controllerPriority != null && foundControllerPriority != null) {
                 if (controllerPriority.getValue() > foundControllerPriority.getValue()) {
                     foundController = controller;
                     foundControllerPriority = controllerPriority;
@@ -782,34 +686,30 @@ public class ConnectableDevice implements DeviceServiceListener {
         return foundController;
     }
 
-    /**
+    /** 
      * Sets the IP address of the ConnectableDevice.
-     *
+     * 
      * @param ipAddress IP address of the ConnectableDevice
      */
     public void setIpAddress(String ipAddress) {
         this.ipAddress = ipAddress;
     }
 
-    /**
-     * Gets the Current IP address of the ConnectableDevice.
-     */
+    /** Gets the Current IP address of the ConnectableDevice. */
     public String getIpAddress() {
         return ipAddress;
     }
 
     /**
      * Sets an estimate of the ConnectableDevice's current friendly name.
-     *
+     * 
      * @param friendlyName Friendly name of the device
      */
     public void setFriendlyName(String friendlyName) {
         this.friendlyName = friendlyName;
     }
 
-    /**
-     * Gets an estimate of the ConnectableDevice's current friendly name.
-     */
+    /** Gets an estimate of the ConnectableDevice's current friendly name. */
     public String getFriendlyName() {
         return friendlyName;
     }
@@ -823,103 +723,90 @@ public class ConnectableDevice implements DeviceServiceListener {
         this.lastKnownIPAddress = lastKnownIPAddress;
     }
 
-    /**
-     * Gets the last IP address this ConnectableDevice was discovered at.
-     */
+    /** Gets the last IP address this ConnectableDevice was discovered at. */
     public String getLastKnownIPAddress() {
         return lastKnownIPAddress;
     }
 
     /**
      * Sets the name of the last wireless network this ConnectableDevice was discovered on.
-     *
+     * 
      * @param lastSeenOnWifi Last Wi-Fi network this device & it's services were discovered on
      */
     public void setLastSeenOnWifi(String lastSeenOnWifi) {
         this.lastSeenOnWifi = lastSeenOnWifi;
     }
 
-    /**
-     * Gets the name of the last wireless network this ConnectableDevice was discovered on.
-     */
+    /** Gets the name of the last wireless network this ConnectableDevice was discovered on. */
     public String getLastSeenOnWifi() {
         return lastSeenOnWifi;
     }
 
     /**
      * Sets the last time (in milli seconds from 1970) that this ConnectableDevice was connected to.
-     *
-     * @param lastConnected Last connected time
+     * 
+     * @param lastConnected Last connected time 
      */
     public void setLastConnected(long lastConnected) {
         this.lastConnected = lastConnected;
     }
 
-    /**
-     * Gets the last time (in milli seconds from 1970) that this ConnectableDevice was connected to.
-     */
+    /** Gets the last time (in milli seconds from 1970) that this ConnectableDevice was connected to. */
     public long getLastConnected() {
         return lastConnected;
     }
 
     /**
      * Sets the last time (in milli seconds from 1970) that this ConnectableDevice was detected.
-     *
+     * 
      * @param lastDetection Last detected time
      */
     public void setLastDetection(long lastDetection) {
         this.lastDetection = lastDetection;
     }
 
-    /**
-     * Gets the last time (in milli seconds from 1970) that this ConnectableDevice was detected.
-     */
+    /** Gets the last time (in milli seconds from 1970) that this ConnectableDevice was detected. */
     public long getLastDetection() {
         return lastDetection;
     }
 
     /**
      * Sets an estimate of the ConnectableDevice's current model name.
-     *
+     * 
      * @param modelName Model name of the ConnectableDevice
      */
     public void setModelName(String modelName) {
         this.modelName = modelName;
     }
 
-    /**
-     * Gets an estimate of the ConnectableDevice's current model name.
-     */
+    /** Gets an estimate of the ConnectableDevice's current model name. */
     public String getModelName() {
         return modelName;
     }
 
     /**
      * Sets an estimate of the ConnectableDevice's current model number.
-     *
+     * 
      * @param modelNumber Model number of the ConnectableDevice
-     */
+     * */
     public void setModelNumber(String modelNumber) {
         this.modelNumber = modelNumber;
     }
 
-    /**
-     * Gets an estimate of the ConnectableDevice's current model number.
-     */
+    /** Gets an estimate of the ConnectableDevice's current model number. */
     public String getModelNumber() {
         return modelNumber;
     }
 
     /**
      * Sets the universally unique id of this particular ConnectableDevice object. This is used internally in the SDK and should not be used.
-     *
      * @param id New id for the ConnectableDevice
      */
     public void setId(String id) {
         this.id = id;
     }
 
-    /**
+    /** 
      * Universally unique id of this particular ConnectableDevice object, persists between sessions in ConnectableDeviceStore for connected devices
      */
     public String getId() {
@@ -948,7 +835,7 @@ public class ConnectableDevice implements DeviceServiceListener {
         // credit: http://stackoverflow.com/a/6623121/2715
         StringBuilder sb = new StringBuilder();
 
-        for (String serviceName : serviceNames) {
+        for (String serviceName : serviceNames) { 
             if (sb.length() > 0)
                 sb.append(", ");
 
@@ -962,10 +849,6 @@ public class ConnectableDevice implements DeviceServiceListener {
     public void update(ServiceDescription description) {
         setIpAddress(description.getIpAddress());
         setFriendlyName(description.getFriendlyName());
-        setManufacture(description.getManufacturer());
-        Log.i("Manufacturure", "onServiceAdded: descriptio update " + description.getManufacturer());
-        Log.i("Manufacturure", "onServiceAdded: descriptio update " + description.toJSONObject().toString());
-
         setModelName(description.getModelName());
         setModelNumber(description.getModelNumber());
         setLastConnected(description.getLastDetection());
@@ -985,7 +868,7 @@ public class ConnectableDevice implements DeviceServiceListener {
             deviceObject.put(KEY_LAST_DETECTED, getLastDetection());
 
             JSONObject jsonServices = new JSONObject();
-            for (DeviceService service : services.values()) {
+            for (DeviceService service: services.values()) {
                 JSONObject serviceObject = service.toJSONObject();
 
                 jsonServices.put(service.getServiceConfig().getServiceUUID(), serviceObject);
@@ -1012,11 +895,10 @@ public class ConnectableDevice implements DeviceServiceListener {
     public void onConnectionFailure(DeviceService service, Error error) {
         // disconnect device if all services are not connected
         onDisconnect(service, error);
-    }
+    } 
 
-    @Override
-    public void onConnectionRequired(DeviceService service) {
-    }
+    @Override public void onConnectionRequired(DeviceService service) {
+    } 
 
     @Override
     public void onConnectionSuccess(DeviceService service) {
@@ -1039,7 +921,7 @@ public class ConnectableDevice implements DeviceServiceListener {
 
             setLastConnected(Util.getTime());
         }
-    }
+    } 
 
     @Override
     public void onDisconnect(DeviceService service, Error error) {
@@ -1054,16 +936,15 @@ public class ConnectableDevice implements DeviceServiceListener {
     public void onPairingFailed(DeviceService service, Error error) {
         for (ConnectableDeviceListener listener : listeners)
             listener.onConnectionFailed(this, new ServiceCommandError(0, "Failed to pair with service " + service.getServiceName(), null));
-    }
+    } 
 
     @Override
     public void onPairingRequired(DeviceService service, PairingType pairingType, Object pairingData) {
         for (ConnectableDeviceListener listener : listeners)
             listener.onPairingRequired(this, service, pairingType);
-    }
+    } 
 
-    @Override
-    public void onPairingSuccess(DeviceService service) {
+    @Override public void onPairingSuccess(DeviceService service) {
     }
 
     private int getConnectedServiceCount() {
@@ -1089,21 +970,5 @@ public class ConnectableDevice implements DeviceServiceListener {
 
     public String getServiceId() {
         return serviceId;
-    }
-
-    public String getManufacture() {
-        return manufacture;
-    }
-
-    public void setManufacture(String manufacture) {
-        this.manufacture = manufacture;
-    }
-
-    public void setType(DeviceType type) {
-        this.type = type;
-    }
-
-    public DeviceType getType() {
-        return type;
     }
 }

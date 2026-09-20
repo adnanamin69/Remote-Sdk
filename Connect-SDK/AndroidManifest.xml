@@ -1,10 +1,18 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.connectsdk"
-    android:versionCode="8"
-    android:versionName="1.4.2" >
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-sdk
-        android:minSdkVersion="16"
-        android:targetSdkVersion="34" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <application android:usesCleartextTraffic="true">
+        <!-- Class referenced in the manifest, com.connectsdk.androidcore.ScreenOnOffReceiver, was not found in the project or the libraries -->
+
+        <uses-library android:name="org.apache.http.legacy" android:required="false" />
+
+        <receiver android:name=".ScreenOnOffReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.SCREEN_ON" />
+                <action android:name="android.intent.action.SCREEN_OFF" />
+            </intent-filter>
+        </receiver>
+    </application>
 </manifest>

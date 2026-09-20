@@ -1,10 +1,10 @@
 /*
  * SSDPDiscoveryProvider
  * Connect SDK
- *
+ * 
  * Copyright (c) 2014 LG Electronics.
  * Created by Hyun Kook Khang on 19 Jan 2014
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -66,9 +66,6 @@ public class SSDPDiscoveryProvider implements DiscoveryProvider {
 
     private Timer scanTimer;
 
-    // Shared timer for staggered M-SEARCH sends in rescan() to prevent thread explosion
-    private Timer rescanSendTimer;
-
     private Pattern uuidReg;
 
     private Thread responseThread;
@@ -85,9 +82,6 @@ public class SSDPDiscoveryProvider implements DiscoveryProvider {
 
         serviceListeners = new CopyOnWriteArrayList<DiscoveryProviderListener>();
         serviceFilters = new CopyOnWriteArrayList<DiscoveryFilter>();
-
-        // One shared timer for all rescan staggered sends
-        rescanSendTimer = new Timer("SSDP-RescanTimer", true);
     }
 
     private void openSocket() {
@@ -114,24 +108,24 @@ public class SSDPDiscoveryProvider implements DiscoveryProvider {
     @Override
     public void start() {
         synchronized (lock) {
-            if (isRunning || ssdpClient == null)
+            if (isRunning)
                 return;
 
             isRunning = true;
 
             openSocket();
 
-            scanTimer = new Timer("SSDP-ScanTimer", true);
+            scanTimer = new Timer();
             scanTimer.schedule(new TimerTask() {
 
                 @Override
                 public void run() {
                     sendSearch();
                 }
-            }, 100, 10000); // assuming RESCAN_INTERVAL was 10000 ms; original constant not shown
+            }, 100, RESCAN_INTERVAL);
 
-            responseThread = new Thread(mResponseHandler, "SSDP-ResponseThread");
-            notifyThread = new Thread(mRespNotifyHandler, "SSDP-NotifyThread");
+            responseThread = new Thread(mResponseHandler);
+            notifyThread = new Thread(mRespNotifyHandler);
 
             responseThread.start();
             notifyThread.start();
@@ -141,7 +135,7 @@ public class SSDPDiscoveryProvider implements DiscoveryProvider {
     public void sendSearch() {
         List<String> killKeys = new ArrayList<String>();
 
-        long killPoint = new Date().getTime() - 120000; // assuming TIMEOUT was 120000 ms
+        long killPoint = new Date().getTime() - TIMEOUT;
 
         for (String key : foundServices.keySet()) {
             ServiceDescription service = foundServices.get(key);
@@ -157,7 +151,8 @@ public class SSDPDiscoveryProvider implements DiscoveryProvider {
                 notifyListenersOfLostService(service);
             }
 
-            foundServices.remove(key);
+            if (foundServices.containsKey(key))
+                foundServices.remove(key);
         }
 
         rescan();
@@ -171,11 +166,6 @@ public class SSDPDiscoveryProvider implements DiscoveryProvider {
             if (scanTimer != null) {
                 scanTimer.cancel();
                 scanTimer = null;
-            }
-
-            if (rescanSendTimer != null) {
-                rescanSendTimer.cancel();
-                rescanSendTimer = null;
             }
 
             if (responseThread != null) {
@@ -210,34 +200,29 @@ public class SSDPDiscoveryProvider implements DiscoveryProvider {
 
     @Override
     public void rescan() {
-        // Cancel any previously scheduled staggered sends and start fresh
-        if (rescanSendTimer != null) {
-            rescanSendTimer.cancel();
-        }
-        rescanSendTimer = new Timer("SSDP-RescanTimer", true);
-
-        for (final DiscoveryFilter searchTarget : serviceFilters) {
+        for (DiscoveryFilter searchTarget : serviceFilters) {
             final String message = SSDPClient.getSSDPSearchMessage(searchTarget.getServiceFilter());
 
-            // Send 3 times, staggered by 1 second (0ms, 1000ms, 2000ms)
+            Timer timer = new Timer();
+            /* Send 3 times like WindowsMedia */
             for (int i = 0; i < 3; i++) {
-                final int delay = i * 1000;
-                if (rescanSendTimer != null)
-                    rescanSendTimer.schedule(new TimerTask() {
-                        @Override
-                        public void run() {
-                            if (!isRunning || ssdpClient == null) {
-                                return;
-                            }
-                            try {
+                TimerTask task = new TimerTask() {
+
+                    @Override
+                    public void run() {
+                        try {
+                            if (ssdpClient != null)
                                 ssdpClient.send(message);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
-                    }, delay);
+                    }
+                };
+
+                timer.schedule(task, i * 1000);
             }
         }
+
     }
 
     @Override
@@ -267,11 +252,11 @@ public class SSDPDiscoveryProvider implements DiscoveryProvider {
     private Runnable mResponseHandler = new Runnable() {
         @Override
         public void run() {
-            while (ssdpClient != null && isRunning) {
+            while (ssdpClient != null) {
                 try {
                     handleSSDPPacket(new SSDPPacket(ssdpClient.responseReceive()));
                 } catch (IOException e) {
-                    if (isRunning) e.printStackTrace();
+                    e.printStackTrace();
                     break;
                 } catch (RuntimeException e) {
                     e.printStackTrace();
@@ -284,11 +269,11 @@ public class SSDPDiscoveryProvider implements DiscoveryProvider {
     private Runnable mRespNotifyHandler = new Runnable() {
         @Override
         public void run() {
-            while (ssdpClient != null && isRunning) {
+            while (ssdpClient != null) {
                 try {
                     handleSSDPPacket(new SSDPPacket(ssdpClient.multicastReceive()));
                 } catch (IOException e) {
-                    if (isRunning) e.printStackTrace();
+                    e.printStackTrace();
                     break;
                 } catch (RuntimeException e) {
                     e.printStackTrace();
@@ -299,6 +284,21 @@ public class SSDPDiscoveryProvider implements DiscoveryProvider {
     };
 
     private void handleSSDPPacket(SSDPPacket ssdpPacket) {
+        // Debugging stuff
+//        Util.runOnUI(new Runnable() {
+//
+//            @Override
+//            public void run() {
+//                Log.d("Connect SDK Socket", "Packet received | type = " + ssdpPacket.type);
+//
+//                for (String key : ssdpPacket.data.keySet()) {
+//                    Log.d("Connect SDK Socket", "    " + key + " = " + ssdpPacket.data.get(key));
+//                }
+//                Log.d("Connect SDK Socket", "__________________________________________");
+//            }
+//        });
+        // End Debugging stuff
+
         if (ssdpPacket == null || ssdpPacket.getData().size() == 0 || ssdpPacket.getType() == null)
             return;
 
@@ -324,6 +324,7 @@ public class SSDPDiscoveryProvider implements DiscoveryProvider {
 
             if (service != null) {
                 foundServices.remove(uuid);
+
                 notifyListenersOfLostService(service);
             }
         } else {
@@ -370,7 +371,11 @@ public class SSDPDiscoveryProvider implements DiscoveryProvider {
                 SSDPDevice device = null;
                 try {
                     device = new SSDPDevice(location, serviceFilter);
-                } catch (IOException | ParserConfigurationException | SAXException e) {
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (ParserConfigurationException e) {
+                    e.printStackTrace();
+                } catch (SAXException e) {
                     e.printStackTrace();
                 }
 
@@ -405,6 +410,7 @@ public class SSDPDiscoveryProvider implements DiscoveryProvider {
                 discoveredServices.remove(uuid);
             }
         }, true);
+
     }
 
     private void notifyListenersOfNewService(ServiceDescription service) {
@@ -417,8 +423,10 @@ public class SSDPDiscoveryProvider implements DiscoveryProvider {
             final ServiceDescription newService = _newService;
 
             Util.runOnUI(new Runnable() {
+
                 @Override
                 public void run() {
+
                     for (DiscoveryProviderListener listener : serviceListeners) {
                         listener.onServiceAdded(SSDPDiscoveryProvider.this, newService);
                     }
@@ -437,6 +445,7 @@ public class SSDPDiscoveryProvider implements DiscoveryProvider {
             final ServiceDescription newService = _newService;
 
             Util.runOnUI(new Runnable() {
+
                 @Override
                 public void run() {
                     for (DiscoveryProviderListener listener : serviceListeners) {
@@ -476,7 +485,13 @@ public class SSDPDiscoveryProvider implements DiscoveryProvider {
     }
 
     public boolean containsServicesWithFilter(SSDPDevice device, String filter) {
-        // TODO: Implement properly if required services are added in future
+//        List<String> servicesRequired = new ArrayList<String>();
+//
+//        for (JSONObject serviceFilter : serviceFilters) {
+//        }
+
+    //  TODO  Implement this method.  Not sure why needs to happen since there are now required services.
+
         return true;
     }
 
